@@ -749,13 +749,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:flutter_app_badger_plus/flutter_app_badger_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:hosta/common/top_snackbar.dart';
-import 'package:hosta/components/about.dart';
-import 'package:hosta/components/contact.dart';
-import 'package:hosta/components/privacy.dart';
-import 'package:hosta/components/profile.dart';
+// import 'package:hosta/common/top_snackbar.dart';
+// import 'package:hosta/components/about.dart';
+// import 'package:hosta/components/contact.dart';
+// import 'package:hosta/components/privacy.dart';
+// import 'package:hosta/components/profile.dart';
 import 'package:hosta/firebase_msg.dart';
 import 'package:hosta/pages/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';

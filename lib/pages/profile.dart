@@ -5,7 +5,7 @@ import 'package:hosta/components/about.dart';
 import 'package:hosta/components/contact.dart';
 import 'package:hosta/components/privacy.dart';
 import 'package:hosta/components/profile.dart'; // Import the profile component
-import 'package:hosta/pages/auth/signin.dart';
+//import 'package:hosta/pages/auth/signin.dart';
 import 'package:hosta/pages/settings/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -235,10 +235,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         centerTitle: true, // This centers the title
         backgroundColor: const Color(0xFF28A745),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back, color: Colors.white),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
