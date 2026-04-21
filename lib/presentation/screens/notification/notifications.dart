@@ -414,7 +414,7 @@ class _NotificationsState extends State<Notifications> {
                 Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       _filterChip(
                         label: "Unread ($unreadCount)",
@@ -426,6 +426,7 @@ class _NotificationsState extends State<Notifications> {
                           });
                         },
                       ),
+                      SizedBox(width:5,),
                       _filterChip(
                         label: "Read ($readCount)",
                         selected: showRead,
@@ -478,7 +479,8 @@ class _NotificationsState extends State<Notifications> {
                             showUnread = false;
                           });
                         },
-                        icon: const Icon(Icons.clear_all, color: Colors.redAccent),
+                        
+                        icon: const Icon(Icons.clear, color: Colors.redAccent),
                         label: const Text(
                           "Clear Filters",
                           style: TextStyle(color: Colors.redAccent, fontSize: 14),
@@ -585,13 +587,18 @@ class _NotificationsState extends State<Notifications> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? Colors.green : Colors.grey[200],
-          borderRadius: BorderRadius.circular(20),
+          color: Colors.green.shade50,
+         // color: selected ? Colors.green  : const Color(0xFFECFDF5),
+          borderRadius: BorderRadius.circular(10),
+         border: selected
+    ? Border.all(color: Colors.black, width: 1)
+    : null,
+          
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : Colors.black87,
+            //color: selected ? Colors.white : Colors.black87,
             fontWeight: FontWeight.w500,
           ),
         ),
