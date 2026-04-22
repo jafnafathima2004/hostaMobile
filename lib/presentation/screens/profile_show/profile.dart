@@ -5,6 +5,7 @@ import 'package:hosta/presentation/screens/ambulance/ambulance_details.dart';
 import 'package:hosta/presentation/screens/auth/signin.dart';
 import 'package:hosta/presentation/screens/blood/blood_details.dart';
 import 'package:hosta/presentation/screens/contact/contact.dart';
+import 'package:hosta/presentation/screens/lab/lab.dart';
 import 'package:hosta/presentation/screens/profile-edit/profile.dart';
 import 'package:hosta/presentation/screens/privacy/privacy.dart';
 import 'package:hosta/presentation/screens/about/about.dart';
@@ -498,6 +499,58 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                         builder: (context) =>
                                             MyBloodDetailsPage(userId: userId),
                                       ),
+                                    );
+                                  },
+                                ),
+                                const Divider(height: 0),
+                                 _buildProfileOption(
+                                  icon: Icons.note_sharp,
+                                  title: 'Lab Report',
+                                  subtitle: 'Lab report details',
+                                  onTap: () async {
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    String userId =
+                                        prefs.getString('userId') ?? '';
+
+                                    if (userId.isEmpty) {
+                                       showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text("Login Required"),
+                                          content: const Text(
+                                            "Please login first",
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                              child: const Text("Cancel",style: TextStyle(color: Colors.black),),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        Signin(),
+                                                  ),
+                                                );
+                                              },
+                                              child: const Text("Login",style: TextStyle(color: Colors.green),),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>LabReport(),
+                                                                               ),
                                     );
                                   },
                                 ),
