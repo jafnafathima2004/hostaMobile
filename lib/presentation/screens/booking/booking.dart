@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:hosta/common/top_snackbar.dart';
 import 'package:intl/intl.dart';
@@ -378,34 +377,40 @@ class _BookingState extends State<Booking> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 600;
+
     // Show message if no user ID
     if (userId == null || userId!.isEmpty) {
       return Scaffold(
         backgroundColor: const Color(0xFFECFDF5),
         appBar: AppBar(
           backgroundColor: Colors.green,
-          title: const Text(
+          title: Text(
             "My Bookings",
             style: TextStyle(
               fontWeight: FontWeight.bold, 
               color: Colors.white,
+              fontSize: screenWidth * 0.05,
             ),
           ),
           centerTitle: true,
         ),
-        body: const Center(
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.person_off, size: 60, color: Colors.grey),
-              SizedBox(height: 16),
+              Icon(Icons.person_off, size: screenWidth * 0.15, color: Colors.grey),
+              SizedBox(height: screenHeight * 0.02),
               Text(
                 "Please login to view your bookings",
                 style: TextStyle(
                   color: Colors.grey,
-                  fontSize: 16,
+                  fontSize: screenWidth * 0.04,
                   fontWeight: FontWeight.w500,
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -419,23 +424,24 @@ class _BookingState extends State<Booking> {
       backgroundColor: const Color(0xFFECFDF5),
       appBar: AppBar(
         backgroundColor: Colors.green,
-        title: const Text(
+        title: Text(
           "My Bookings",
           style: TextStyle(
             fontWeight: FontWeight.bold, 
             color: Colors.white,
+            fontSize: screenWidth * 0.05,
           ),
         ),
         centerTitle: true,
         actions: [
           // Socket connection indicator
           if (!_isSocketConnected)
-            const Padding(
-              padding: EdgeInsets.only(right: 8.0),
-              child: Icon(Icons.wifi_off, color: Colors.white, size: 20),
+            Padding(
+              padding: EdgeInsets.only(right: screenWidth * 0.02),
+              child: Icon(Icons.wifi_off, color: Colors.white, size: screenWidth * 0.05),
             ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh, color: Colors.white, size: screenWidth * 0.06),
             onPressed: () {
               _fetchBookings();
               if (!_isSocketConnected) {
@@ -449,7 +455,7 @@ class _BookingState extends State<Booking> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(screenWidth * 0.04),
               child: Column(
                 children: [
                   // Search Bar
@@ -457,16 +463,20 @@ class _BookingState extends State<Booking> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: "Search by hospital or doctor",
-                      prefixIcon: const Icon(Icons.search),
+                      prefixIcon: Icon(Icons.search, size: screenWidth * 0.06),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(screenWidth * 0.03),
                       ),
                       filled: true,
                       fillColor: Colors.white,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.04,
+                        vertical: screenHeight * 0.015,
+                      ),
                     ),
                     onChanged: (value) => setState(() => searchQuery = value),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: screenHeight * 0.015),
 
                   // Date Filter
                   Row(
@@ -476,16 +486,22 @@ class _BookingState extends State<Booking> {
                         selectedDate == null
                             ? "Filter by date"
                             : "Date: ${DateFormat('dd MMM yyyy').format(selectedDate!)}",
-                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: screenWidth * 0.035,
+                        ),
                       ),
                       TextButton.icon(
                         onPressed: _selectDate,
-                        icon: const Icon(Icons.calendar_today, size: 18),
-                        label: const Text("Select Date"),
+                        icon: Icon(Icons.calendar_today, size: screenWidth * 0.045),
+                        label: Text(
+                          "Select Date",
+                          style: TextStyle(fontSize: screenWidth * 0.035),
+                        ),
                       ),
                       if (selectedDate != null)
                         IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
+                          icon: Icon(Icons.clear, size: screenWidth * 0.045),
                           onPressed: () {
                             setState(() {
                               selectedDate = null;
@@ -502,9 +518,14 @@ class _BookingState extends State<Booking> {
                       children: ["All", "Pending", "Accepted", "Declined", "Cancelled"]
                           .map(
                             (f) => Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
                               child: ChoiceChip(
-                                label: Text(f),
+                                label: Text(
+                                  f,
+                                  style: TextStyle(
+                                    fontSize: screenWidth * 0.035,
+                                  ),
+                                ),
                                 selected: selectedFilter == f,
                                 onSelected: (_) {
                                   setState(() {
@@ -519,6 +540,7 @@ class _BookingState extends State<Booking> {
                                 selectedColor: Colors.green,
                                 labelStyle: TextStyle(
                                   color: selectedFilter == f ? Colors.white : Colors.black,
+                                  fontSize: screenWidth * 0.035,
                                 ),
                               ),
                             ),
@@ -526,23 +548,24 @@ class _BookingState extends State<Booking> {
                           .toList(),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: screenHeight * 0.02),
 
                   // Booking List
                   Expanded(
                     child: bookingsToShow.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.event_busy, size: 60, color: Colors.grey),
-                                SizedBox(height: 16),
+                                Icon(Icons.event_busy, size: screenWidth * 0.12, color: Colors.grey),
+                                SizedBox(height: screenHeight * 0.02),
                                 Text(
                                   "No bookings found",
                                   style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey,
-                                      fontWeight: FontWeight.w600),
+                                    fontSize: screenWidth * 0.04,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
@@ -553,114 +576,125 @@ class _BookingState extends State<Booking> {
                               final b = bookingsToShow[index];
                               return Card(
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                elevation: 3,
+                                    borderRadius: BorderRadius.circular(screenWidth * 0.03)),
+                                margin: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+                                elevation: isSmallScreen ? 2 : 3,
                                 child: Padding(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: EdgeInsets.all(screenWidth * 0.03),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
-                                          const Icon(Icons.local_hospital,
-                                              color: Colors.green),
-                                          const SizedBox(width: 8),
+                                          Icon(Icons.local_hospital,
+                                              color: Colors.green, size: screenWidth * 0.06),
+                                          SizedBox(width: screenWidth * 0.02),
                                           Expanded(
                                             child: Text(
                                               b["hospital"],
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 16),
+                                                  fontSize: screenWidth * 0.04),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 6),
+                                      SizedBox(height: screenHeight * 0.0075),
                                       Row(
                                         children: [
-                                          const Icon(Icons.person,
-                                              color: Colors.blueAccent),
-                                          const SizedBox(width: 8),
+                                          Icon(Icons.person,
+                                              color: Colors.blueAccent, size: screenWidth * 0.05),
+                                          SizedBox(width: screenWidth * 0.02),
                                           Expanded(
                                             child: Text(
                                               "Doctor: ${b["doctor"]}",
                                               overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(fontSize: screenWidth * 0.035),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 4),
+                                      SizedBox(height: screenHeight * 0.005),
                                       Row(
                                         children: [
-                                          const Icon(Icons.medical_services,
-                                              color: Colors.orange),
-                                          const SizedBox(width: 8),
+                                          Icon(Icons.medical_services,
+                                              color: Colors.orange, size: screenWidth * 0.05),
+                                          SizedBox(width: screenWidth * 0.02),
                                           Expanded(
                                             child: Text(
                                               "Type: ${b["type"]}",
                                               overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(fontSize: screenWidth * 0.035),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 4),
+                                      SizedBox(height: screenHeight * 0.005),
                                       Row(
                                         children: [
-                                          const Icon(Icons.health_and_safety,
-                                              color: Colors.purple),
-                                          const SizedBox(width: 8),
+                                          Icon(Icons.health_and_safety,
+                                              color: Colors.purple, size: screenWidth * 0.05),
+                                          SizedBox(width: screenWidth * 0.02),
                                           Expanded(
                                             child: Text(
                                               "Specialty: ${b["specialty"]}",
                                               overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(fontSize: screenWidth * 0.035),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 4),
+                                      SizedBox(height: screenHeight * 0.005),
                                       Row(
                                         children: [
-                                          const Icon(Icons.calendar_today,
-                                              color: Colors.teal),
-                                          const SizedBox(width: 8),
-                                          Text("Date: ${b["date"]}"),
+                                          Icon(Icons.calendar_today,
+                                              color: Colors.teal, size: screenWidth * 0.05),
+                                          SizedBox(width: screenWidth * 0.02),
+                                          Text(
+                                            "Date: ${b["date"]}",
+                                            style: TextStyle(fontSize: screenWidth * 0.035),
+                                          ),
                                         ],
                                       ),
-                                      const SizedBox(height: 4),
+                                      SizedBox(height: screenHeight * 0.005),
                                       Row(
                                         children: [
-                                          const Icon(Icons.access_time,
-                                              color: Colors.redAccent),
-                                          const SizedBox(width: 8),
-                                          Text("Time: ${_formatTime(b["time"])}"),
+                                          Icon(Icons.access_time,
+                                              color: Colors.redAccent, size: screenWidth * 0.05),
+                                          SizedBox(width: screenWidth * 0.02),
+                                          Text(
+                                            "Time: ${_formatTime(b["time"])}",
+                                            style: TextStyle(fontSize: screenWidth * 0.035),
+                                          ),
                                         ],
                                       ),
                                       if (b["patient_name"]?.isNotEmpty == true) ...[
-                                        const SizedBox(height: 4),
+                                        SizedBox(height: screenHeight * 0.005),
                                         Row(
                                           children: [
-                                            const Icon(Icons.person_outline,
-                                                color: Colors.brown),
-                                            const SizedBox(width: 8),
+                                            Icon(Icons.person_outline,
+                                                color: Colors.brown, size: screenWidth * 0.05),
+                                            SizedBox(width: screenWidth * 0.02),
                                             Expanded(
                                               child: Text(
                                                 "Patient: ${b["patient_name"]}",
                                                 overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(fontSize: screenWidth * 0.035),
                                               ),
                                             ),
                                           ],
                                         ),
                                       ],
-                                      const Divider(height: 20),
+                                      Divider(height: screenHeight * 0.025),
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
                                           // Status badge
                                           Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 4),
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: screenWidth * 0.03, 
+                                                vertical: screenHeight * 0.005),
                                             decoration: BoxDecoration(
                                               color: b["status"] == "accepted"
                                                   ? Colors.green
@@ -671,13 +705,13 @@ class _BookingState extends State<Booking> {
                                                           : b["status"] == "pending"
                                                               ? Colors.blue
                                                               : Colors.grey,
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius: BorderRadius.circular(screenWidth * 0.03),
                                             ),
                                             child: Text(
                                               b["status"].toString().toUpperCase(),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                   color: Colors.white,
-                                                  fontSize: 12,
+                                                  fontSize: screenWidth * 0.03,
                                                   fontWeight: FontWeight.bold),
                                             ),
                                           ),
@@ -688,11 +722,18 @@ class _BookingState extends State<Booking> {
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: Colors.red,
                                                 foregroundColor: Colors.white,
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: screenWidth * 0.04,
+                                                  vertical: screenHeight * 0.01,
+                                                ),
                                                 shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(8),
+                                                  borderRadius: BorderRadius.circular(screenWidth * 0.02),
                                                 ),
                                               ),
-                                              child: const Text("Cancel"),
+                                              child: Text(
+                                                "Cancel",
+                                                style: TextStyle(fontSize: screenWidth * 0.035),
+                                              ),
                                             ),
                                         ],
                                       ),
