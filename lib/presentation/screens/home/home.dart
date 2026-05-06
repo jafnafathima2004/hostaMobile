@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hosta/presentation/screens/pharmacy/medicine_reminder.dart';
+import 'package:hosta/presentation/screens/reminder/medicine_reminder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 import 'dart:async';
