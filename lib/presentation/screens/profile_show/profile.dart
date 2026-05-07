@@ -7,6 +7,7 @@ import 'package:hosta/presentation/screens/blood/blood_details.dart';
 import 'package:hosta/presentation/screens/contact/contact.dart';
 import 'package:hosta/presentation/screens/history/myhistory.dart';
 import 'package:hosta/presentation/screens/lab/lab.dart';
+import 'package:hosta/presentation/screens/prescription.dart';
 import 'package:hosta/presentation/screens/profile-edit/profile.dart';
 import 'package:hosta/presentation/screens/privacy/privacy.dart';
 import 'package:hosta/presentation/screens/about/about.dart';
@@ -215,19 +216,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title:  Text(
+        title: Text(
           'Profile',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold,
-           fontSize: screenWidth * 0.05,
+          style: TextStyle(
+            color: Colors.white, 
+            fontWeight: FontWeight.bold,
+            fontSize: screenWidth * 0.05,
           ),
-          
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFF28A745),
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: Icon(Icons.settings, color: Colors.white, size: screenWidth * 0.06),
             onPressed: _navigateToSettings,
           ),
         ],
@@ -264,17 +266,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 child: Container(
                                   width: screenWidth * 0.28,
                                   height: screenWidth * 0.28,
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 120,
-                                    maxHeight: 120,
-                                    minWidth: 80,
-                                    minHeight: 80,
+                                  constraints: BoxConstraints(
+                                    maxWidth: screenWidth * 0.32,
+                                    maxHeight: screenWidth * 0.32,
+                                    minWidth: screenWidth * 0.22,
+                                    minHeight: screenWidth * 0.22,
                                   ),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: Colors.white,
-                                      width: 4,
+                                      width: screenWidth * 0.01,
                                     ),
                                     color: Colors.white,
                                   ),
@@ -305,12 +307,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                                     return child;
                                                   return Container(
                                                     color: Colors.grey[200],
-                                                    child: const Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        color: Color(
-                                                          0xFF28A745,
-                                                        ),
+                                                    child: Center(
+                                                      child: CircularProgressIndicator(
+                                                        color: const Color(0xFF28A745),
+                                                        strokeWidth: screenWidth * 0.008,
                                                       ),
                                                     ),
                                                   );
@@ -370,7 +370,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                       vertical: screenHeight * 0.015,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
+                                      borderRadius: BorderRadius.circular(screenWidth * 0.075),
                                     ),
                                   ),
                                 ),
@@ -402,9 +402,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
                               // Settings Card
                               Card(
-                                elevation: 2,
+                                elevation: screenWidth * 0.005,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(screenWidth * 0.0375),
                                 ),
                                 child: Column(
                                   children: [
@@ -423,15 +423,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                           showDialog(
                                             context: context,
                                             builder: (context) => AlertDialog(
-                                              title: const Text("Login Required"),
-                                              content: const Text(
+                                              title: Text("Login Required", style: TextStyle(fontSize: screenWidth * 0.045)),
+                                              content: Text(
                                                 "Please login first",
+                                                style: TextStyle(fontSize: screenWidth * 0.04),
                                               ),
                                               actions: [
                                                 TextButton(
                                                   onPressed: () =>
                                                       Navigator.pop(context),
-                                                  child: const Text("Cancel",style: TextStyle(color: Colors.black),),
+                                                  child: Text("Cancel", style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.04)),
                                                 ),
                                                 TextButton(
                                                   onPressed: () {
@@ -444,7 +445,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                                       ),
                                                     );
                                                   },
-                                                  child: const Text("Login",style: TextStyle(color: Colors.green),),
+                                                  child: Text("Login", style: TextStyle(color: Colors.green, fontSize: screenWidth * 0.04)),
                                                 ),
                                               ],
                                             ),
@@ -479,15 +480,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                            showDialog(
                                             context: context,
                                             builder: (context) => AlertDialog(
-                                              title: const Text("Login Required"),
-                                              content: const Text(
+                                              title: Text("Login Required", style: TextStyle(fontSize: screenWidth * 0.045)),
+                                              content: Text(
                                                 "Please login first",
+                                                style: TextStyle(fontSize: screenWidth * 0.04),
                                               ),
                                               actions: [
                                                 TextButton(
                                                   onPressed: () =>
                                                       Navigator.pop(context),
-                                                  child: const Text("Cancel",style: TextStyle(color: Colors.black),),
+                                                  child: Text("Cancel", style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.04)),
                                                 ),
                                                 TextButton(
                                                   onPressed: () {
@@ -500,7 +502,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                                       ),
                                                     );
                                                   },
-                                                  child: const Text("Login",style: TextStyle(color: Colors.green),),
+                                                  child: Text("Login", style: TextStyle(color: Colors.green, fontSize: screenWidth * 0.04)),
                                                 ),
                                               ],
                                             ),
@@ -517,7 +519,66 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                         );
                                       },
                                     ),
-                                    const Divider(height: 0),
+                                const Divider(height: 0),
+                                _buildProfileOption(
+                                  
+                                  icon: Icons.note_add_outlined,
+                                  title: 'Prescription',
+                                  subtitle: 'About prescription',
+                                  screenWidth: screenWidth,
+                                  screenHeight: screenHeight,
+                                  onTap: () async {
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    String userId =
+                                        prefs.getString('userId') ?? '';
+                                    if (userId.isEmpty) {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: Text("Login Required", style: TextStyle(fontSize: screenWidth * 0.045)),
+                                          content: Text(
+                                            "Please login first",
+                                            style: TextStyle(fontSize: screenWidth * 0.04),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context),
+                                              child: Text("Cancel", style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.04)),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        Signin(),
+                                                        
+                                                  ),
+                                                );
+                                              },
+                                              child: Text("Login", style: TextStyle(color: Colors.green, fontSize: screenWidth * 0.04)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            PrescriptionDetailsScreen(
+                                              // userId: userId,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                     const Divider(height: 0),
                                      _buildProfileOption(
                                       icon: Icons.note_sharp,
                                       title: 'Lab Report',
@@ -534,15 +595,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                            showDialog(
                                             context: context,
                                             builder: (context) => AlertDialog(
-                                              title: const Text("Login Required"),
-                                              content: const Text(
+                                              title: Text("Login Required", style: TextStyle(fontSize: screenWidth * 0.045)),
+                                              content: Text(
                                                 "Please login first",
+                                                style: TextStyle(fontSize: screenWidth * 0.04),
                                               ),
                                               actions: [
                                                 TextButton(
                                                   onPressed: () =>
                                                       Navigator.pop(context),
-                                                  child: const Text("Cancel",style: TextStyle(color: Colors.black),),
+                                                  child: Text("Cancel", style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.04)),
                                                 ),
                                                 TextButton(
                                                   onPressed: () {
@@ -555,7 +617,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                                       ),
                                                     );
                                                   },
-                                                  child: const Text("Login",style: TextStyle(color: Colors.green),),
+                                                  child: Text("Login", style: TextStyle(color: Colors.green, fontSize: screenWidth * 0.04)),
                                                 ),
                                               ],
                                             ),
@@ -588,15 +650,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                            showDialog(
                                             context: context,
                                             builder: (context) => AlertDialog(
-                                              title: const Text("Login Required"),
-                                              content: const Text(
+                                              title: Text("Login Required", style: TextStyle(fontSize: screenWidth * 0.045)),
+                                              content: Text(
                                                 "Please login first",
+                                                style: TextStyle(fontSize: screenWidth * 0.04),
                                               ),
                                               actions: [
                                                 TextButton(
                                                   onPressed: () =>
                                                       Navigator.pop(context),
-                                                  child: const Text("Cancel",style: TextStyle(color: Colors.black),),
+                                                  child: Text("Cancel", style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.04)),
                                                 ),
                                                 TextButton(
                                                   onPressed: () {
@@ -609,7 +672,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                                       ),
                                                     );
                                                   },
-                                                  child: const Text("Login",style: TextStyle(color: Colors.green),),
+                                                  child: Text("Login", style: TextStyle(color: Colors.green, fontSize: screenWidth * 0.04)),
                                                 ),
                                               ],
                                             ),
@@ -656,9 +719,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   ],
                                 ),
                               ),
-
                               SizedBox(height: screenHeight * 0.025),
-
                               // Support Section
                               Align(
                                 alignment: Alignment.centerLeft,
@@ -675,9 +736,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
                               // Support Card
                               Card(
-                                elevation: 2,
+                                elevation: screenWidth * 0.005,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(screenWidth * 0.0375),
                                 ),
                                 child: Column(
                                   children: [
@@ -730,7 +791,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         padding: EdgeInsets.all(screenWidth * 0.02),
         decoration: BoxDecoration(
           color: const Color(0xFF28A745).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(screenWidth * 0.025),
         ),
         child: Icon(icon, color: const Color(0xFF28A745), size: screenWidth * 0.055),
       ),

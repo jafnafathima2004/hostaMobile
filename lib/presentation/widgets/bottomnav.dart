@@ -57,9 +57,9 @@ class _BottomNavState extends ConsumerState<Bottomnav> {
 
   void _initializePages() {
     pages = [
-      const Home(key: ValueKey('home_page')),
-      Booking(key: _pageKeys[1]),
-      const Notifications(key: ValueKey('notifications_page')),
+       Home(key: ValueKey('home_page')),
+      BookingScreen(key: _pageKeys[1]),
+       Notifications(key: ValueKey('notifications_page')),
       ProfilePage(key: _pageKeys[3]), // Added profile page to pages list
     ];
   }

@@ -5,8 +5,10 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   firebase_core
+  flutter_timezone
   geolocator_windows
   permission_handler_windows
+  printing
   url_launcher_windows
 )
 

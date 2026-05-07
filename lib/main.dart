@@ -1,13 +1,14 @@
+import 'package:alarm/alarm.dart' show Alarm;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hosta/firebase_msg.dart';
 import 'package:hosta/presentation/widgets/bottomnav.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+   WidgetsFlutterBinding.ensureInitialized(); 
+await Alarm.init();
   
   await Firebase.initializeApp();
 
