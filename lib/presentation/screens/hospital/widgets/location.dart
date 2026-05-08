@@ -13,20 +13,29 @@ class LocationTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final lat = hospital["latitude"]?.toString() ?? "0";
     final lng = hospital["longitude"]?.toString() ?? "0";
     
     // Check if coordinates are valid
     if (lat == "0" && lng == "0") {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.location_off, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
+            Icon(
+              Icons.location_off,
+              size: screenWidth * 0.16,
+              color: Colors.grey,
+            ),
+            SizedBox(height: screenHeight * 0.02),
             Text(
               "Location not available",
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(
+                fontSize: screenWidth * 0.04,
+                color: Colors.grey,
+              ),
             ),
           ],
         ),
@@ -48,19 +57,26 @@ class LocationTab extends StatelessWidget {
         // Open in Maps Button
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(screenWidth * 0.04),
           child: ElevatedButton.icon(
             onPressed: onOpenMaps,
-            icon: const Icon(Icons.open_in_new, color: Colors.white),
-            label: const Text(
+            icon: Icon(
+              Icons.open_in_new,
+              color: Colors.white,
+              size: screenWidth * 0.05,
+            ),
+            label: Text(
               "Open in Google Maps",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: screenWidth * 0.04,
+              ),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(screenWidth * 0.03),
               ),
             ),
           ),

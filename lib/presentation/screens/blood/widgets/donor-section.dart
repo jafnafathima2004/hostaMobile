@@ -31,16 +31,25 @@ class DonorSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     if (isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Colors.red),
-            SizedBox(height: 16),
+            CircularProgressIndicator(
+              color: Colors.red,
+              strokeWidth: screenWidth * 0.008,
+            ),
+            SizedBox(height: screenHeight * 0.02),
             Text(
               "Loading donors...",
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(
+                fontSize: screenWidth * 0.04,
+                color: Colors.grey,
+              ),
             ),
           ],
         ),
@@ -50,82 +59,100 @@ class DonorSection extends StatelessWidget {
     final filteredDonors = _getFilteredDonors();
 
     if (filteredDonors.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(screenWidth, screenHeight);
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(screenWidth * 0.03),
       itemCount: filteredDonors.length,
       itemBuilder: (context, index) {
-        return _buildDonorCard(filteredDonors[index]);
+        return _buildDonorCard(
+          filteredDonors[index],
+          screenWidth,
+          screenHeight,
+        );
       },
     );
   }
 
   List<dynamic> _getFilteredDonors() {
-    return donors.where((donor) {
+    final filtered = donors.where((donor) {
       final user = donor['userId'] ?? {};
       final address = donor['address'] ?? {};
 
       final name = (user['name'] ?? '').toLowerCase();
       final bloodGroup = (donor['bloodGroup'] ?? '');
-      final country = (address['country'] ?? '');
-      final state = (address['state'] ?? '');
-      final district = (address['district'] ?? '');
-      final place = (address['place'] ?? '');
+      final country = (address['country'] ?? '').toString().trim();
+      final state = (address['state'] ?? '').toString().trim();
+      final district = (address['district'] ?? '').toString().trim();
+      final place = (address['place'] ?? '').toString().trim();
 
       final matchesSearch = name.contains(searchQuery.toLowerCase());
-      final matchesCountry = selectedCountry.isEmpty || country == selectedCountry;
+      final matchesCountry =
+          selectedCountry.isEmpty || country == selectedCountry;
       final matchesState = selectedState.isEmpty || state == selectedState;
-      final matchesDistrict = selectedDistrict.isEmpty || district == selectedDistrict;
+      final matchesDistrict =
+          selectedDistrict.isEmpty || district == selectedDistrict;
       final matchesPlace = selectedPlace.isEmpty || place == selectedPlace;
-      final matchesBlood = selectedBloodGroup.isEmpty ||
+      final matchesBlood =
+          selectedBloodGroup.isEmpty ||
           selectedBloodGroup == "All" ||
           bloodGroup == selectedBloodGroup;
 
-      return matchesSearch &&
+      final isMatch =
+          matchesSearch &&
           matchesCountry &&
           matchesState &&
           matchesDistrict &&
           matchesPlace &&
           matchesBlood;
+
+      return isMatch;
     }).toList();
+
+    return filtered;
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(double screenWidth, double screenHeight) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             donors.isEmpty ? Icons.error_outline : Icons.search_off,
-            size: 60,
+            size: screenWidth * 0.15,
             color: Colors.grey,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: screenHeight * 0.02),
           Text(
             donors.isEmpty ? "No donors available" : "No donors found",
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            style: TextStyle(fontSize: screenWidth * 0.04, color: Colors.grey),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
           Text(
             donors.isEmpty
                 ? "Check your connection or try again later"
                 : "Try adjusting your filters",
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: screenWidth * 0.035, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
           if (donors.isEmpty) ...[
-            const SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.025),
             ElevatedButton(
               onPressed: onRefresh,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.06,
+                  vertical: screenHeight * 0.015,
+                ),
               ),
-              child: const Text(
+              child: Text(
                 "Try Again",
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.035,
+                ),
               ),
             ),
           ],
@@ -134,73 +161,86 @@ class DonorSection extends StatelessWidget {
     );
   }
 
-  Widget _buildDonorCard(Map<String, dynamic> donor) {
+  Widget _buildDonorCard(
+    Map<String, dynamic> donor,
+    double screenWidth,
+    double screenHeight,
+  ) {
     final user = donor['userId'] ?? {};
     final address = donor['address'] ?? {};
-    
+
     final dateOfBirth = donor['dateOfBirth']?.toString() ?? '';
     final age = dateOfBirth.isNotEmpty ? calculateAge(dateOfBirth) : 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: screenHeight * 0.015),
+      padding: EdgeInsets.all(screenWidth * 0.03),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(screenWidth * 0.035),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 3)],
       ),
       child: Row(
         children: [
           // Blood Group Circle
           Container(
-            width: 55,
-            height: 55,
-            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+            width: screenWidth * 0.1375,
+            height: screenWidth * 0.1375,
+            decoration: const BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
             alignment: Alignment.center,
             child: Text(
               donor["bloodGroup"] ?? "",
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: screenWidth * 0.04,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: screenWidth * 0.03),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   user["name"] ?? "Unknown",
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.04,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: screenHeight * 0.0025),
                 if (age > 0)
                   Text(
                     "$age years",
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.0325,
                       color: Colors.black54,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                const SizedBox(height: 4),
+                SizedBox(height: screenHeight * 0.005),
                 Text(
                   address["place"] ?? "",
-                  style: const TextStyle(fontSize: 13, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.0325,
+                    color: Colors.black54,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: screenHeight * 0.0025),
                 Text(
                   "${address["district"] ?? ""}, ${address["state"] ?? ""}, ${address["country"] ?? ""}",
-                  style: const TextStyle(fontSize: 12, color: Colors.black45),
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.03,
+                    color: Colors.black45,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -211,13 +251,26 @@ class DonorSection extends StatelessWidget {
             onPressed: () => onMakePhoneCall(user["phone"] ?? ""),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.03,
+                vertical: screenHeight * 0.0125,
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(screenWidth * 0.025),
               ),
             ),
-            icon: const Icon(Icons.call, size: 18, color: Colors.white),
-            label: const Text("Call", style: TextStyle(color: Colors.white)),
+            icon: Icon(
+              Icons.call,
+              size: screenWidth * 0.045,
+              color: Colors.white,
+            ),
+            label: Text(
+              "Call",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: screenWidth * 0.035,
+              ),
+            ),
           ),
         ],
       ),

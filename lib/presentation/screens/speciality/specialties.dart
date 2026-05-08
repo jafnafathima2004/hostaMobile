@@ -18,9 +18,13 @@ class _SpecialitesState extends ConsumerState<Specialties> {
   }
 
   void _showErrorSnackbar(String message) {
+    final screenWidth = MediaQuery.of(context).size.width;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: screenWidth * 0.04),
+        ),
         backgroundColor: Colors.red,
       ),
     );
@@ -28,7 +32,8 @@ class _SpecialitesState extends ConsumerState<Specialties> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final searchQuery = ref.watch(searchQueryProvider);
     final filteredSpecialties = ref.watch(filteredSpecialtiesProvider);
     final specialtiesAsync = ref.watch(specialtiesProvider);
@@ -41,22 +46,30 @@ class _SpecialitesState extends ConsumerState<Specialties> {
       backgroundColor: const Color(0xFFECFDF5),
       appBar: AppBar(
         backgroundColor: Colors.green,
-        title: const Text(
+        title: Text(
           "Medical Specialties",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
-            fontSize: 20,
+            fontSize: screenWidth * 0.05,
           ),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: screenWidth * 0.055,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(
+              Icons.refresh,
+              color: Colors.white,
+              size: screenWidth * 0.06,
+            ),
             onPressed: () {
               ref.invalidate(specialtiesProvider);
             },
@@ -70,20 +83,30 @@ class _SpecialitesState extends ConsumerState<Specialties> {
           children: [
             // ===== Search Box =====
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04,
+                vertical: screenHeight * 0.015,
+              ),
               child: TextField(
                 onChanged: (value) {
                   ref.read(searchQueryProvider.notifier).state = value;
                 },
                 decoration: InputDecoration(
                   hintText: 'Search specialties...',
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  hintStyle: TextStyle(fontSize: screenWidth * 0.035),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.grey,
+                    size: screenWidth * 0.06,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 0,
+                    horizontal: screenWidth * 0.04,
+                  ),
                   filled: true,
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(screenWidth * 0.03),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -94,16 +117,23 @@ class _SpecialitesState extends ConsumerState<Specialties> {
             specialtiesAsync.when(
               data: (specialties) {
                 if (filteredSpecialties.isEmpty) {
-                  return const Expanded(
+                  return Expanded(
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search_off, size: 60, color: Colors.grey),
-                          SizedBox(height: 16),
+                          Icon(
+                            Icons.search_off,
+                            size: screenWidth * 0.15,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: screenHeight * 0.02),
                           Text(
                             "No specialties found",
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.04,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
@@ -114,7 +144,10 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                 return Expanded(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.04,
+                        vertical: screenHeight * 0.01,
+                      ),
                       child: GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -144,7 +177,7 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                                 }
                               }
                             },
-                            child: _buildCard(name, imageUrl, width),
+                            child: _buildCard(name, imageUrl, screenWidth, screenHeight),
                           );
                         },
                       ),
@@ -152,16 +185,22 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                   ),
                 );
               },
-              loading: () => const Expanded(
+              loading: () => Expanded(
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(color: Colors.green),
-                      SizedBox(height: 16),
+                      CircularProgressIndicator(
+                        color: Colors.green,
+                        strokeWidth: screenWidth * 0.008,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
                       Text(
                         "Loading specialties...",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.04,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -172,27 +211,44 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 60, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      const Text(
-                        "No specialties available",
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      Icon(
+                        Icons.error_outline,
+                        size: screenWidth * 0.15,
+                        color: Colors.grey,
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: screenHeight * 0.02),
+                      Text(
+                        "No specialties available",
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.04,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      SizedBox(height: screenHeight * 0.01),
                       Text(
                         "Error: ${error.toString()}",
-                        style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.035,
+                          color: Colors.grey,
+                        ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: screenHeight * 0.02),
                       ElevatedButton(
                         onPressed: () {
                           ref.invalidate(specialtiesProvider);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.06,
+                            vertical: screenHeight * 0.0125,
+                          ),
                         ),
-                        child: const Text("Retry"),
+                        child: Text(
+                          "Retry",
+                          style: TextStyle(fontSize: screenWidth * 0.035),
+                        ),
                       ),
                     ],
                   ),
@@ -205,11 +261,11 @@ class _SpecialitesState extends ConsumerState<Specialties> {
     );
   }
 
-  Widget _buildCard(String name, String imageUrl, double width) {
+  Widget _buildCard(String name, String imageUrl, double screenWidth, double screenHeight) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(screenWidth * 0.035),
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
@@ -224,11 +280,11 @@ class _SpecialitesState extends ConsumerState<Specialties> {
           // Specialty Image
           if (imageUrl.isNotEmpty)
             Container(
-              width: width * 0.22,
-              height: width * 0.22,
+              width: screenWidth * 0.22,
+              height: screenWidth * 0.22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey[300]!, width: 2),
+                border: Border.all(color: Colors.grey[300]!, width: screenWidth * 0.005),
               ),
               child: ClipOval(
                 child: Image.network(
@@ -243,14 +299,14 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                                 loadingProgress.expectedTotalBytes!
                             : null,
                         color: Colors.green,
-                        strokeWidth: 2,
+                        strokeWidth: screenWidth * 0.005,
                       ),
                     );
                   },
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(
                       Icons.medical_services,
-                      size: width * 0.18,
+                      size: screenWidth * 0.18,
                       color: Colors.green,
                     );
                   },
@@ -259,43 +315,45 @@ class _SpecialitesState extends ConsumerState<Specialties> {
             )
           else
             Container(
-              width: width * 0.22,
-              height: width * 0.22,
+              width: screenWidth * 0.22,
+              height: screenWidth * 0.22,
               decoration: BoxDecoration(
                 color: Colors.green[50],
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey[300]!, width: 2),
+                border: Border.all(color: Colors.grey[300]!, width: screenWidth * 0.005),
               ),
               child: Icon(
                 Icons.medical_services,
-                size: width * 0.18,
+                size: screenWidth * 0.18,
                 color: Colors.green,
               ),
             ),
           
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
           
           // Specialty Name
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.015),
             child: Text(
               name[0].toUpperCase() + name.substring(1),
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: screenWidth * 0.035,
                 fontWeight: FontWeight.w500,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
         ],
       ),
     );
   }
 
   void _showHospitalPopup(BuildContext context, String specialtyName) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final hospitalOps = ref.read(hospitalOperationsProvider);
     final hospitals = ref.read(hospitalsForSpecialtyProvider);
     final isLoading = ref.read(hospitalsLoadingProvider);
@@ -305,8 +363,8 @@ class _SpecialitesState extends ConsumerState<Specialties> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(screenWidth * 0.05)),
       ),
       builder: (context) {
         return DraggableScrollableSheet(
@@ -320,15 +378,18 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                 children: [
                   // --- Header with Close Button ---
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.04,
+                      vertical: screenHeight * 0.015,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
                             "${specialtyName.toUpperCase()} HOSPITALS",
-                            style: const TextStyle(
-                              fontSize: 18,
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.045,
                               fontWeight: FontWeight.bold,
                             ),
                             maxLines: 1,
@@ -336,7 +397,11 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.grey),
+                          icon: Icon(
+                            Icons.close,
+                            color: Colors.grey,
+                            size: screenWidth * 0.06,
+                          ),
                           onPressed: () => Navigator.pop(context),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -345,15 +410,15 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                     ),
                   ),
 
-                  const Divider(height: 1),
+                  Divider(height: screenHeight * 0.001, thickness: screenWidth * 0.0025),
 
                   // --- Hospital Count ---
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: EdgeInsets.symmetric(vertical: screenHeight * 0.015),
                     child: Text(
                       "Found ${filteredHospitals.length} hospitals",
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.035,
                         color: Colors.grey,
                         fontWeight: FontWeight.w500,
                       ),
@@ -362,30 +427,37 @@ class _SpecialitesState extends ConsumerState<Specialties> {
 
                   // --- Loading Indicator ---
                   if (isLoading)
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: CircularProgressIndicator(color: Colors.green),
+                    Padding(
+                      padding: EdgeInsets.all(screenWidth * 0.04),
+                      child: CircularProgressIndicator(
+                        color: Colors.green,
+                        strokeWidth: screenWidth * 0.008,
+                      ),
                     )
                   else if (filteredHospitals.isEmpty)
                     // --- No Hospitals Found ---
-                    const Expanded(
+                    Expanded(
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.local_hospital_outlined, size: 60, color: Colors.grey),
-                            SizedBox(height: 16),
+                            Icon(
+                              Icons.local_hospital_outlined,
+                              size: screenWidth * 0.15,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
                             Text(
                               "No hospitals found",
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: screenWidth * 0.04,
                                 color: Colors.grey,
                               ),
                             ),
                             Text(
                               "for this specialty",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: screenWidth * 0.035,
                                 color: Colors.grey,
                               ),
                             ),
@@ -401,7 +473,7 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                         itemCount: filteredHospitals.length,
                         itemBuilder: (context, index) {
                           final hospital = filteredHospitals[index];
-                          return _buildHospitalCard(context, hospital, specialtyName);
+                          return _buildHospitalCard(context, hospital, specialtyName, screenWidth, screenHeight);
                         },
                       ),
                     ),
@@ -414,7 +486,7 @@ class _SpecialitesState extends ConsumerState<Specialties> {
     );
   }
 
-  Widget _buildHospitalCard(BuildContext context, Map<String, dynamic> hospital, String specialtyName) {
+  Widget _buildHospitalCard(BuildContext context, Map<String, dynamic> hospital, String specialtyName, double screenWidth, double screenHeight) {
     final hospitalOps = ref.read(hospitalOperationsProvider);
     final imageUrl = (hospital['image'] as Map<String, dynamic>?)?['imageUrl'] as String? ?? '';
     final hospitalName = hospital['name'] as String? ?? 'Unknown Hospital';
@@ -426,9 +498,12 @@ class _SpecialitesState extends ConsumerState<Specialties> {
     final totalDoctorsCount = hospitalOps.getTotalDoctorsCount(hospital);
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: screenHeight * 0.01,
+      ),
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.03)),
       child: InkWell(
         onTap: () {
           if (hospitalId.isNotEmpty) {
@@ -437,15 +512,15 @@ class _SpecialitesState extends ConsumerState<Specialties> {
             _showErrorSnackbar("Hospital ID not available");
           }
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(screenWidth * 0.03),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(screenWidth * 0.04),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Hospital Avatar
-              _buildHospitalAvatar(imageUrl),
-              const SizedBox(width: 12),
+              _buildHospitalAvatar(imageUrl, screenWidth),
+              SizedBox(width: screenWidth * 0.03),
               
               // Hospital Details
               Expanded(
@@ -455,25 +530,29 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                     // Hospital Name
                     Text(
                       hospitalName,
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.04,
                         fontWeight: FontWeight.bold,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: screenHeight * 0.0075),
                     
                     // Specialty Doctors Count
                     Row(
                       children: [
-                        Icon(Icons.medical_services, size: 14, color: Colors.green),
-                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.medical_services,
+                          size: screenWidth * 0.035,
+                          color: Colors.green,
+                        ),
+                        SizedBox(width: screenWidth * 0.01),
                         Expanded(
                           child: Text(
                             "$specialtyDoctorsCount $specialtyName doctors",
-                            style: const TextStyle(
-                              fontSize: 13,
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.0325,
                               fontWeight: FontWeight.w500,
                               color: Colors.green,
                             ),
@@ -483,36 +562,44 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: screenHeight * 0.0025),
                     
                     // Total Doctors Count
                     Row(
                       children: [
-                        Icon(Icons.people_alt_outlined, size: 14, color: Colors.grey[600]),
-                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.people_alt_outlined,
+                          size: screenWidth * 0.035,
+                          color: Colors.grey[600],
+                        ),
+                        SizedBox(width: screenWidth * 0.01),
                         Text(
                           "$totalDoctorsCount total doctors",
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.03,
                             color: Colors.grey,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: screenHeight * 0.0075),
                     
                     // Address
                     if (address.isNotEmpty)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: screenWidth * 0.035,
+                            color: Colors.grey[600],
+                          ),
+                          SizedBox(width: screenWidth * 0.01),
                           Expanded(
                             child: Text(
                               address,
-                              style: const TextStyle(
-                                fontSize: 12,
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.03,
                                 color: Colors.grey,
                               ),
                               maxLines: 2,
@@ -524,15 +611,19 @@ class _SpecialitesState extends ConsumerState<Specialties> {
                     
                     // Phone
                     if (phone.isNotEmpty) ...[
-                      const SizedBox(height: 4),
+                      SizedBox(height: screenHeight * 0.005),
                       Row(
                         children: [
-                          Icon(Icons.phone, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.phone,
+                            size: screenWidth * 0.035,
+                            color: Colors.grey[600],
+                          ),
+                          SizedBox(width: screenWidth * 0.01),
                           Text(
                             phone,
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.03,
                               color: Colors.grey,
                             ),
                           ),
@@ -544,9 +635,13 @@ class _SpecialitesState extends ConsumerState<Specialties> {
               ),
               
               // Forward Arrow
-              const Padding(
-                padding: EdgeInsets.only(left: 8),
-                child: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              Padding(
+                padding: EdgeInsets.only(left: screenWidth * 0.02),
+                child: Icon(
+                  Icons.arrow_forward_ios,
+                  size: screenWidth * 0.04,
+                  color: Colors.grey,
+                ),
               ),
             ],
           ),
@@ -555,14 +650,14 @@ class _SpecialitesState extends ConsumerState<Specialties> {
     );
   }
 
-  Widget _buildHospitalAvatar(String imageUrl) {
+  Widget _buildHospitalAvatar(String imageUrl, double screenWidth) {
     if (imageUrl.isNotEmpty) {
       return Container(
-        width: 60,
-        height: 60,
+        width: screenWidth * 0.15,
+        height: screenWidth * 0.15,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: Colors.grey[300]!, width: screenWidth * 0.005),
         ),
         child: ClipOval(
           child: Image.network(
@@ -583,8 +678,12 @@ class _SpecialitesState extends ConsumerState<Specialties> {
             errorBuilder: (context, error, stackTrace) {
               return Container(
                 color: Colors.blue[100],
-                child: const Center(
-                  child: Icon(Icons.local_hospital, size: 24, color: Colors.green),
+                child: Center(
+                  child: Icon(
+                    Icons.local_hospital,
+                    size: screenWidth * 0.06,
+                    color: Colors.green,
+                  ),
                 ),
               );
             },
@@ -593,15 +692,19 @@ class _SpecialitesState extends ConsumerState<Specialties> {
       );
     } else {
       return Container(
-        width: 60,
-        height: 60,
+        width: screenWidth * 0.15,
+        height: screenWidth * 0.15,
         decoration: BoxDecoration(
           color: Colors.green[100],
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: Colors.grey[300]!, width: screenWidth * 0.005),
         ),
-        child: const Center(
-          child: Icon(Icons.local_hospital, size: 24, color: Colors.green),
+        child: Center(
+          child: Icon(
+            Icons.local_hospital,
+            size: screenWidth * 0.06,
+            color: Colors.green,
+          ),
         ),
       );
     }

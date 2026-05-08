@@ -81,14 +81,14 @@ class _ReviewsTabState extends State<ReviewsTab> {
 
     if (rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select a rating")),
+        SnackBar(content: Text("Please select a rating")),
       );
       return;
     }
 
     if (reviewController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please write a review")),
+        SnackBar(content: Text("Please write a review")),
       );
       return;
     }
@@ -100,14 +100,14 @@ class _ReviewsTabState extends State<ReviewsTab> {
   void _handleUpdateReview() {
     if (editingRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select a rating")),
+        SnackBar(content: Text("Please select a rating")),
       );
       return;
     }
 
     if (editingReviewController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please write a review")),
+        SnackBar(content: Text("Please write a review")),
       );
       return;
     }
@@ -117,22 +117,40 @@ class _ReviewsTabState extends State<ReviewsTab> {
   }
 
   void _handleDeleteReview(String reviewId) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Delete Review"),
-        content: const Text("Are you sure you want to delete this review?"),
+        title: Text(
+          "Delete Review",
+          style: TextStyle(fontSize: screenWidth * 0.045),
+        ),
+        content: Text(
+          "Are you sure you want to delete this review?",
+          style: TextStyle(fontSize: screenWidth * 0.04),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: Text(
+              "Cancel",
+              style: TextStyle(fontSize: screenWidth * 0.04),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               widget.onDeleteReview(reviewId);
             },
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            child: Text(
+              "Delete",
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: screenWidth * 0.04,
+              ),
+            ),
           ),
         ],
       ),
@@ -229,31 +247,39 @@ class _ReviewsTabState extends State<ReviewsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth * 0.04),
       child: Column(
         children: [
           // Authentication Status
           if (widget.currentUserId == null)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
+              padding: EdgeInsets.all(screenWidth * 0.03),
+              margin: EdgeInsets.only(bottom: screenHeight * 0.02),
               decoration: BoxDecoration(
                 color: Colors.orange[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange),
+                borderRadius: BorderRadius.circular(screenWidth * 0.02),
+                border: Border.all(color: Colors.orange, width: screenWidth * 0.0025),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info, color: Colors.orange[700]),
-                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.info,
+                    color: Colors.orange[700],
+                    size: screenWidth * 0.05,
+                  ),
+                  SizedBox(width: screenWidth * 0.02),
                   Expanded(
                     child: Text(
                       "Login to submit or manage reviews",
                       style: TextStyle(
                         color: Colors.orange[700],
                         fontWeight: FontWeight.w500,
+                        fontSize: screenWidth * 0.035,
                       ),
                     ),
                   ),
@@ -264,21 +290,35 @@ class _ReviewsTabState extends State<ReviewsTab> {
           // Reviews List
           Expanded(
             child: widget.isReviewLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: screenWidth * 0.008,
+                    ),
+                  )
                 : widget.reviews.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.reviews, size: 64, color: Colors.grey),
-                            SizedBox(height: 16),
+                            Icon(
+                              Icons.reviews,
+                              size: screenWidth * 0.16,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
                             Text(
                               "No reviews yet",
-                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.04,
+                                color: Colors.grey,
+                              ),
                             ),
                             Text(
                               "Be the first to review!",
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.035,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
@@ -300,7 +340,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
                           final reviewDate = _getReviewDate(review);
 
                           return Card(
-                            margin: const EdgeInsets.only(bottom: 10),
+                            margin: EdgeInsets.only(bottom: screenHeight * 0.0125),
                             color: isTemp
                                 ? Colors.grey[100]
                                 : (isUpdating
@@ -309,7 +349,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
                                         ? Colors.yellow[50]
                                         : null)),
                             child: Padding(
-                              padding: const EdgeInsets.all(12),
+                              padding: EdgeInsets.all(screenWidth * 0.03),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -317,39 +357,42 @@ class _ReviewsTabState extends State<ReviewsTab> {
                                     children: [
                                       CircleAvatar(
                                         backgroundColor: Colors.green[100],
+                                        radius: screenWidth * 0.045,
                                         child: Text(
                                           userInitial,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             color: Colors.green,
                                             fontWeight: FontWeight.bold,
+                                            fontSize: screenWidth * 0.035,
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
+                                      SizedBox(width: screenWidth * 0.03),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               userName,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                fontSize: screenWidth * 0.04,
                                               ),
                                             ),
                                             if (isSubmitting)
-                                              const Text(
+                                              Text(
                                                 "Submitting...",
                                                 style: TextStyle(
-                                                  fontSize: 12,
+                                                  fontSize: screenWidth * 0.03,
                                                   color: Colors.orange,
                                                   fontStyle: FontStyle.italic,
                                                 ),
                                               )
                                             else if (isUpdating)
-                                              const Text(
+                                              Text(
                                                 "Updating...",
                                                 style: TextStyle(
-                                                  fontSize: 12,
+                                                  fontSize: screenWidth * 0.03,
                                                   color: Colors.blue,
                                                   fontStyle: FontStyle.italic,
                                                 ),
@@ -364,48 +407,67 @@ class _ReviewsTabState extends State<ReviewsTab> {
                                                 ? Icons.star
                                                 : Icons.star_border,
                                             color: Colors.amber,
-                                            size: 18,
+                                            size: screenWidth * 0.045,
                                           );
                                         }),
                                       ),
                                     ],
                                   ),
                                   if (comment.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    Text(comment),
+                                    SizedBox(height: screenHeight * 0.01),
+                                    Text(
+                                      comment,
+                                      style: TextStyle(fontSize: screenWidth * 0.035),
+                                    ),
                                   ],
                                   if (reviewDate.isNotEmpty) ...[
-                                    const SizedBox(height: 4),
+                                    SizedBox(height: screenHeight * 0.005),
                                     Text(
                                       _formatDate(reviewDate),
-                                      style: const TextStyle(
-                                        fontSize: 12,
+                                      style: TextStyle(
+                                        fontSize: screenWidth * 0.03,
                                         color: Colors.grey,
                                       ),
                                     ),
                                   ],
                                   if (isOwnReview && !isTemp && !isSubmitting && !isUpdating) ...[
-                                    const SizedBox(height: 8),
+                                    SizedBox(height: screenHeight * 0.01),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
                                         TextButton.icon(
                                           onPressed: () => _startEditReview(review),
-                                          icon: const Icon(Icons.edit, size: 16),
-                                          label: const Text("Edit"),
+                                          icon: Icon(
+                                            Icons.edit,
+                                            size: screenWidth * 0.04,
+                                          ),
+                                          label: Text(
+                                            "Edit",
+                                            style: TextStyle(fontSize: screenWidth * 0.035),
+                                          ),
                                           style: TextButton.styleFrom(
                                             minimumSize: Size.zero,
-                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
+                                        SizedBox(width: screenWidth * 0.02),
                                         TextButton.icon(
                                           onPressed: () => _handleDeleteReview(review["_id"]),
-                                          icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                                          label: const Text("Delete", style: TextStyle(color: Colors.red)),
+                                          icon: Icon(
+                                            Icons.delete,
+                                            size: screenWidth * 0.04,
+                                            color: Colors.red,
+                                          ),
+                                          label: Text(
+                                            "Delete",
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                              fontSize: screenWidth * 0.035,
+                                            ),
+                                          ),
                                           style: TextButton.styleFrom(
                                             minimumSize: Size.zero,
-                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
                                           ),
                                         ),
                                       ],
@@ -419,46 +481,59 @@ class _ReviewsTabState extends State<ReviewsTab> {
                       ),
           ),
 
-          const Divider(),
+          Divider(thickness: screenWidth * 0.0025),
 
           // Review Form (Create or Edit)
           if (editingReviewId != null)
-            _buildEditReviewForm()
+            _buildEditReviewForm(screenWidth, screenHeight)
           else
-            _buildCreateReviewForm(),
+            _buildCreateReviewForm(screenWidth, screenHeight),
         ],
       ),
     );
   }
 
   // ========== CREATE REVIEW FORM ==========
-  Widget _buildCreateReviewForm() {
+  Widget _buildCreateReviewForm(double screenWidth, double screenHeight) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Write a Review:",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: screenWidth * 0.04,
+          ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: screenHeight * 0.0125),
         _buildRatingStars(
           rating,
           (newRating) => setState(() => rating = newRating),
           widget.currentUserId != null,
+          screenWidth,
+          screenHeight,
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: screenHeight * 0.0125),
         TextField(
           controller: reviewController,
           decoration: InputDecoration(
             hintText: widget.currentUserId == null 
                 ? "Please login to write a review"
                 : "Share your experience...",
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            hintStyle: TextStyle(fontSize: screenWidth * 0.035),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(screenWidth * 0.025),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.03,
+              vertical: screenHeight * 0.015,
+            ),
           ),
           maxLines: 3,
           enabled: widget.currentUserId != null && !widget.isReviewLoading,
+          style: TextStyle(fontSize: screenWidth * 0.035),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: screenHeight * 0.015),
         Center(
           child: ElevatedButton.icon(
             onPressed: widget.currentUserId == null 
@@ -466,19 +541,26 @@ class _ReviewsTabState extends State<ReviewsTab> {
                 : (widget.isReviewLoading ? null : _handleCreateReview),
             icon: Icon(
               widget.currentUserId == null ? Icons.login : Icons.send, 
-              color: Colors.white
+              color: Colors.white,
+              size: screenWidth * 0.05,
             ),
             label: Text(
               widget.currentUserId == null 
                   ? "Login to Review" 
                   : (widget.isReviewLoading ? "Submitting..." : "Submit Review"),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: screenWidth * 0.04,
+              ),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: widget.currentUserId == null ? Colors.orange : Colors.green,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.06,
+                vertical: screenHeight * 0.015,
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(screenWidth * 0.025),
               ),
             ),
           ),
@@ -488,62 +570,91 @@ class _ReviewsTabState extends State<ReviewsTab> {
   }
 
   // ========== EDIT REVIEW FORM ==========
-  Widget _buildEditReviewForm() {
+  Widget _buildEditReviewForm(double screenWidth, double screenHeight) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Edit Your Review:",
           style: TextStyle(
             fontWeight: FontWeight.bold, 
-            fontSize: 16, 
-            color: Colors.green
+            fontSize: screenWidth * 0.04, 
+            color: Colors.green,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: screenHeight * 0.0125),
         _buildRatingStars(
           editingRating,
           (newRating) => setState(() => editingRating = newRating),
           true,
+          screenWidth,
+          screenHeight,
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: screenHeight * 0.0125),
         TextField(
           controller: editingReviewController,
           decoration: InputDecoration(
             hintText: "Edit your review...",
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            hintStyle: TextStyle(fontSize: screenWidth * 0.035),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(screenWidth * 0.025),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.03,
+              vertical: screenHeight * 0.015,
+            ),
           ),
           maxLines: 3,
           enabled: !widget.isReviewLoading,
+          style: TextStyle(fontSize: screenWidth * 0.035),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: screenHeight * 0.015),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton.icon(
               onPressed: widget.isReviewLoading ? null : _handleUpdateReview,
-              icon: const Icon(Icons.save, color: Colors.white),
+              icon: Icon(
+                Icons.save,
+                color: Colors.white,
+                size: screenWidth * 0.05,
+              ),
               label: Text(
                 widget.isReviewLoading ? "Updating..." : "Update Review",
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.04,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.05,
+                  vertical: screenHeight * 0.015,
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: screenWidth * 0.03),
             TextButton.icon(
               onPressed: widget.isReviewLoading ? null : _cancelEdit,
-              icon: const Icon(Icons.cancel),
-              label: const Text("Cancel"),
+              icon: Icon(
+                Icons.cancel,
+                size: screenWidth * 0.05,
+              ),
+              label: Text(
+                "Cancel",
+                style: TextStyle(fontSize: screenWidth * 0.04),
+              ),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.05,
+                  vertical: screenHeight * 0.015,
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
                 ),
               ),
             ),
@@ -554,7 +665,13 @@ class _ReviewsTabState extends State<ReviewsTab> {
   }
 
   // ========== RATING STARS WIDGET ==========
-  Widget _buildRatingStars(double currentRating, Function(double) onRatingChanged, bool isEnabled) {
+  Widget _buildRatingStars(
+    double currentRating,
+    Function(double) onRatingChanged,
+    bool isEnabled,
+    double screenWidth,
+    double screenHeight,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (index) {
@@ -562,7 +679,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
           icon: Icon(
             index < currentRating ? Icons.star : Icons.star_border,
             color: isEnabled ? Colors.amber : Colors.grey,
-            size: 30,
+            size: screenWidth * 0.075,
           ),
           onPressed: isEnabled 
               ? () => onRatingChanged(index + 1.0)

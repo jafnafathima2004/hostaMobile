@@ -1548,17 +1548,25 @@ class _ReminderScreenState extends ConsumerState<ReminderScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: Text(
-          'Registering medications',
-          style: TextStyle(fontSize: fontSizeTitle),
-        ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.green,
         elevation: 0,
-        foregroundColor: Colors.black,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _goBack,
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: screenWidth * 0.05,
+          ),
         ),
+        title: Text(
+          "Registering medications",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: screenWidth * 0.06,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: Padding(
         padding: EdgeInsets.all(horizontalPadding),

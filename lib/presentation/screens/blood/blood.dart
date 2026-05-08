@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:hosta/presentation/screens/blood/donate.dart';
 import 'package:hosta/presentation/screens/auth/signin.dart';
@@ -27,7 +26,15 @@ class _BloodState extends State<Blood> {
   String selectedBloodGroup = '';
 
   final List<String> bloodGroups = [
-    "All", "A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"
+    "All",
+    "A+",
+    "A-",
+    "B+",
+    "B-",
+    "O+",
+    "O-",
+    "AB+",
+    "AB-",
   ];
 
   List<String> countries = [];
@@ -51,7 +58,7 @@ class _BloodState extends State<Blood> {
       final prefs = await SharedPreferences.getInstance();
       final storedBloodId = prefs.getString('bloodId');
       final storedUserId = prefs.getString('userId');
-      
+
       setState(() {
         bloodId = storedBloodId;
         userId = storedUserId;
@@ -61,66 +68,83 @@ class _BloodState extends State<Blood> {
     }
   }
 
+  Future<void> _fetchDonors() async {
+    try {
+      setState(() => isLoading = true);
 
+      final response = await _apiService.getAllDonors();
 
-Future<void> _fetchDonors() async {
-  try {
-    setState(() => isLoading = true);
+      if (response.statusCode == 200 && response.data != null) {
+        List donorList = [];
 
-    final response = await _apiService.getAllDonors();
+        if (response.data is Map && response.data['donors'] != null) {
+          donorList = response.data['donors'];
+        } else if (response.data is List) {
+          donorList = response.data;
+        }
 
-    if (response.statusCode == 200 && response.data != null) {
-      List donorList = [];
+        // SAVE TO LOCAL
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('cached_donors', jsonEncode(donorList));
 
-      if (response.data is Map && response.data['donors'] != null) {
-        donorList = response.data['donors'];
-      } else if (response.data is List) {
-        donorList = response.data;
+        setState(() {
+          donors = donorList;
+          _extractLocationData(donorList);
+        });
       }
+    } catch (e) {
+      print("❌ API failed, loading from cache");
 
-      // ✅ SAVE TO LOCAL
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('cached_donors', jsonEncode(donorList));
+      final cachedData = prefs.getString('cached_donors');
 
-      setState(() {
-        donors = donorList;
-      });
+      if (cachedData != null) {
+        final donorList = jsonDecode(cachedData);
+        setState(() {
+          donors = donorList;
+          _extractLocationData(donorList);
+        });
+      } else {
+        setState(() {
+          donors = [];
+          countries = [];
+          states = [];
+          districts = [];
+          places = [];
+        });
+      }
+    } finally {
+      setState(() => isLoading = false);
     }
-  } catch (e) {
-    print("❌ API failed, loading from cache");
-
-    // ✅ LOAD FROM LOCAL IF INTERNET FAILS
-    final prefs = await SharedPreferences.getInstance();
-    final cachedData = prefs.getString('cached_donors');
-
-    if (cachedData != null) {
-      setState(() {
-        donors = jsonDecode(cachedData);
-      });
-    } else {
-      setState(() {
-        donors = [];
-      });
-    }
-  } finally {
-    setState(() => isLoading = false);
   }
-}
 
-  List<String> _extractUniqueValues(List<dynamic> donorList, String field) {
-    final values = <String>[];
-    
+  void _extractLocationData(List<dynamic> donorList) {
+    final uniqueCountries = <String>{};
+    final uniqueStates = <String>{};
+    final uniqueDistricts = <String>{};
+    final uniquePlaces = <String>{};
+
     for (final donor in donorList) {
       final address = donor['address'] ?? {};
-      final value = address[field]?.toString().trim() ?? '';
-      
-      if (value.isNotEmpty && !values.contains(value)) {
-        values.add(value);
-      }
+
+      final country = address['country']?.toString().trim() ?? '';
+      final state = address['state']?.toString().trim() ?? '';
+      final district = address['district']?.toString().trim() ?? '';
+      final place = address['place']?.toString().trim() ?? '';
+
+      if (country.isNotEmpty && country != 'null') uniqueCountries.add(country);
+      if (state.isNotEmpty && state != 'null') uniqueStates.add(state);
+      if (district.isNotEmpty && district != 'null')
+        uniqueDistricts.add(district);
+      if (place.isNotEmpty && place != 'null') uniquePlaces.add(place);
     }
-    
-    values.sort();
-    return values;
+
+    setState(() {
+      countries = uniqueCountries.toList()..sort();
+      states = uniqueStates.toList()..sort();
+      districts = uniqueDistricts.toList()..sort();
+      places = uniquePlaces.toList()..sort();
+    });
   }
 
   int _calculateAge(String dateOfBirth) {
@@ -131,18 +155,17 @@ Future<void> _fetchDonors() async {
       } else {
         birthDate = DateTime.parse('${dateOfBirth}T00:00:00.000Z');
       }
-      
+
       final now = DateTime.now();
       int age = now.year - birthDate.year;
-      
-      if (now.month < birthDate.month || 
+
+      if (now.month < birthDate.month ||
           (now.month == birthDate.month && now.day < birthDate.day)) {
         age--;
       }
-      
+
       return age;
     } catch (e) {
-      print("Error calculating age for $dateOfBirth: $e");
       return 0;
     }
   }
@@ -181,26 +204,37 @@ Future<void> _fetchDonors() async {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: const Color(0xFFECFDF5),
       appBar: AppBar(
         backgroundColor: Colors.red,
-        title: const Text(
+        title: Text(
           "Blood Donor",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
-            fontSize: 20,
+            fontSize: screenWidth * 0.05,
           ),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: screenWidth * 0.055,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(
+              Icons.refresh,
+              color: Colors.white,
+              size: screenWidth * 0.06,
+            ),
             onPressed: _refreshData,
             tooltip: 'Refresh',
           ),
@@ -210,18 +244,21 @@ Future<void> _fetchDonors() async {
       body: SafeArea(
         child: Column(
           children: [
-            _buildSearchAndDonate(),
+            _buildSearchAndDonate(screenWidth, screenHeight),
             LocationSection(
               selectedCountry: selectedCountry,
               selectedState: selectedState,
               selectedDistrict: selectedDistrict,
               selectedPlace: selectedPlace,
               countries: countries,
-              states: states,
-              districts: districts,
-              places: places,
+              states: states, // Pass ALL states, not filtered
+              districts: districts, // Pass ALL districts, not filtered
+              places: places, // Pass ALL places, not filtered
               donors: donors,
               onLocationSelected: (country, state, district, place) {
+                print(
+                  "📍 Location selected: $country, $state, $district, $place",
+                ); // Debug print
                 setState(() {
                   selectedCountry = country;
                   selectedState = state;
@@ -230,6 +267,7 @@ Future<void> _fetchDonors() async {
                 });
               },
               onClear: () {
+                print("📍 Location cleared"); // Debug print
                 setState(() {
                   selectedCountry = '';
                   selectedState = '';
@@ -240,7 +278,7 @@ Future<void> _fetchDonors() async {
                 });
               },
             ),
-            _buildBloodGroupChips(),
+            _buildBloodGroupChips(screenWidth, screenHeight),
             Expanded(
               child: DonorSection(
                 isLoading: isLoading,
@@ -262,9 +300,12 @@ Future<void> _fetchDonors() async {
     );
   }
 
-  Widget _buildSearchAndDonate() {
+  Widget _buildSearchAndDonate(double screenWidth, double screenHeight) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: screenHeight * 0.015,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -272,53 +313,74 @@ Future<void> _fetchDonors() async {
               onChanged: (value) => setState(() => searchQuery = value),
               decoration: InputDecoration(
                 hintText: "Search by name...",
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                hintStyle: TextStyle(fontSize: screenWidth * 0.035),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Colors.grey,
+                  size: screenWidth * 0.06,
+                ),
                 filled: true,
                 fillColor: Colors.grey[100],
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.03),
                   borderSide: BorderSide.none,
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: screenHeight * 0.0125,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: screenWidth * 0.02),
           if (bloodId == null)
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.04,
+                  vertical: screenHeight * 0.015,
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
                 ),
               ),
               onPressed: _handleDonateNavigation,
-              child: const Text("Donate", style: TextStyle(color: Colors.white)),
+              child: Text(
+                "Donate",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.035,
+                ),
+              ),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildBloodGroupChips() {
+  Widget _buildBloodGroupChips(double screenWidth, double screenHeight) {
     return SizedBox(
-      height: 45,
+      height: screenHeight * 0.056,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.03,
+          vertical: screenHeight * 0.0075,
+        ),
         itemCount: bloodGroups.length,
         itemBuilder: (context, index) {
           final bg = bloodGroups[index];
           final isSelected = selectedBloodGroup == bg;
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(right: screenWidth * 0.02),
             child: ChoiceChip(
-              label: Text(bg),
+              label: Text(bg, style: TextStyle(fontSize: screenWidth * 0.035)),
               selected: isSelected,
               selectedColor: Colors.red,
               labelStyle: TextStyle(
                 color: isSelected ? Colors.white : Colors.black,
                 fontWeight: FontWeight.w500,
+                fontSize: screenWidth * 0.035,
               ),
               onSelected: (_) {
                 setState(() {

@@ -30,24 +30,39 @@ class LocationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: screenHeight * 0.005,
+      ),
       child: Row(
         children: [
           Expanded(
             child: InkWell(
               onTap: () => _openLocationFilter(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.03,
+                  vertical: screenHeight * 0.0125,
+                ),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.grey.shade300,
+                    width: screenWidth * 0.0025,
+                  ),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
                 ),
                 child: Text(
                   selectedCountry.isEmpty
                       ? "Select Location"
                       : "$selectedCountry > $selectedState > $selectedDistrict > $selectedPlace",
-                  style: const TextStyle(fontSize: 14, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.035,
+                    color: Colors.black54,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -56,8 +71,18 @@ class LocationSection extends StatelessWidget {
           ),
           TextButton.icon(
             onPressed: onClear,
-            icon: const Icon(Icons.clear, color: Colors.red),
-            label: const Text("Clear", style: TextStyle(color: Colors.red)),
+            icon: Icon(
+              Icons.clear,
+              color: Colors.red,
+              size: screenWidth * 0.05,
+            ),
+            label: Text(
+              "Clear",
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: screenWidth * 0.035,
+              ),
+            ),
           ),
         ],
       ),
@@ -65,6 +90,9 @@ class LocationSection extends StatelessWidget {
   }
 
   void _openLocationFilter(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     String tempCountry = selectedCountry;
     String tempState = selectedState;
     String tempDistrict = selectedDistrict;
@@ -73,56 +101,86 @@ class LocationSection extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(screenWidth * 0.05),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             // Get filtered locations based on current TEMPORARY selections
             List<String> filteredStates = _getFilteredStates(tempCountry);
-            List<String> filteredDistricts = _getFilteredDistricts(tempCountry, tempState);
-            List<String> filteredPlaces = _getFilteredPlaces(tempCountry, tempState, tempDistrict);
+            List<String> filteredDistricts = _getFilteredDistricts(
+              tempCountry,
+              tempState,
+            );
+            List<String> filteredPlaces = _getFilteredPlaces(
+              tempCountry,
+              tempState,
+              tempDistrict,
+            );
 
             return Padding(
               padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                MediaQuery.of(context).viewInsets.bottom + 16,
+                screenWidth * 0.04,
+                screenHeight * 0.02,
+                screenWidth * 0.04,
+                MediaQuery.of(context).viewInsets.bottom + screenHeight * 0.02,
               ),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Center(
+                    Center(
                       child: Text(
                         "Select Location",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.045,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    
+                    SizedBox(height: screenHeight * 0.02),
+                    Divider(thickness: screenWidth * 0.0025),
+
                     // Country Dropdown
                     DropdownButtonFormField<String>(
                       value: tempCountry.isEmpty ? null : tempCountry,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: "Country *",
-                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            screenWidth * 0.025,
+                          ),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.03,
+                          vertical: screenHeight * 0.015,
+                        ),
                       ),
                       items: [
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: '',
-                          child: Text("Select Country", style: TextStyle(color: Colors.grey)),
+                          child: Text(
+                            "Select Country",
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: screenWidth * 0.035,
+                            ),
+                          ),
                         ),
                         ...countries.map((country) {
                           return DropdownMenuItem(
                             value: country,
-                            child: Text(country),
+                            child: Text(
+                              country,
+                              style: TextStyle(fontSize: screenWidth * 0.035),
+                            ),
                           );
                         }).toList(),
                       ],
@@ -135,27 +193,45 @@ class LocationSection extends StatelessWidget {
                         });
                       },
                     ),
-                    const SizedBox(height: 16),
-                    
+                    SizedBox(height: screenHeight * 0.02),
+
                     // State Dropdown
                     if (tempCountry.isNotEmpty) ...[
                       DropdownButtonFormField<String>(
                         value: tempState.isEmpty ? null : tempState,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: "State *",
-                          border: OutlineInputBorder(),
+                          labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              screenWidth * 0.025,
+                            ),
+                          ),
                           filled: true,
                           fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.03,
+                            vertical: screenHeight * 0.015,
+                          ),
                         ),
                         items: [
-                          const DropdownMenuItem(
+                          DropdownMenuItem(
                             value: '',
-                            child: Text("Select State", style: TextStyle(color: Colors.grey)),
+                            child: Text(
+                              "Select State",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: screenWidth * 0.035,
+                              ),
+                            ),
                           ),
                           ...filteredStates.map((state) {
                             return DropdownMenuItem(
                               value: state,
-                              child: Text(state),
+                              child: Text(
+                                state,
+                                style: TextStyle(fontSize: screenWidth * 0.035),
+                              ),
                             );
                           }).toList(),
                         ],
@@ -167,28 +243,46 @@ class LocationSection extends StatelessWidget {
                           });
                         },
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: screenHeight * 0.02),
                     ],
-                    
+
                     // District Dropdown
                     if (tempCountry.isNotEmpty && tempState.isNotEmpty) ...[
                       DropdownButtonFormField<String>(
                         value: tempDistrict.isEmpty ? null : tempDistrict,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: "District *",
-                          border: OutlineInputBorder(),
+                          labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              screenWidth * 0.025,
+                            ),
+                          ),
                           filled: true,
                           fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.03,
+                            vertical: screenHeight * 0.015,
+                          ),
                         ),
                         items: [
-                          const DropdownMenuItem(
+                          DropdownMenuItem(
                             value: '',
-                            child: Text("Select District", style: TextStyle(color: Colors.grey)),
+                            child: Text(
+                              "Select District",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: screenWidth * 0.035,
+                              ),
+                            ),
                           ),
                           ...filteredDistricts.map((district) {
                             return DropdownMenuItem(
                               value: district,
-                              child: Text(district),
+                              child: Text(
+                                district,
+                                style: TextStyle(fontSize: screenWidth * 0.035),
+                              ),
                             );
                           }).toList(),
                         ],
@@ -199,29 +293,49 @@ class LocationSection extends StatelessWidget {
                           });
                         },
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: screenHeight * 0.02),
                     ],
-                    
+
                     // Place Dropdown
-                    if (tempCountry.isNotEmpty && tempState.isNotEmpty && tempDistrict.isNotEmpty) ...[
+                    if (tempCountry.isNotEmpty &&
+                        tempState.isNotEmpty &&
+                        tempDistrict.isNotEmpty) ...[
                       DropdownButtonFormField<String>(
                         isExpanded: true,
                         value: tempPlace.isEmpty ? null : tempPlace,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: "Place",
-                          border: OutlineInputBorder(),
+                          labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              screenWidth * 0.025,
+                            ),
+                          ),
                           filled: true,
                           fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.03,
+                            vertical: screenHeight * 0.015,
+                          ),
                         ),
                         items: [
-                          const DropdownMenuItem(
+                          DropdownMenuItem(
                             value: '',
-                            child: Text("Select Place", style: TextStyle(color: Colors.grey)),
+                            child: Text(
+                              "Select Place",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: screenWidth * 0.035,
+                              ),
+                            ),
                           ),
                           ...filteredPlaces.map((place) {
                             return DropdownMenuItem(
                               value: place,
-                              child: Text(place),
+                              child: Text(
+                                place,
+                                style: TextStyle(fontSize: screenWidth * 0.035),
+                              ),
                             );
                           }).toList(),
                         ],
@@ -231,30 +345,50 @@ class LocationSection extends StatelessWidget {
                           });
                         },
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: screenHeight * 0.02),
                     ],
-                    
-                    const SizedBox(height: 24),
-                    
+
+                    SizedBox(height: screenHeight * 0.03),
+
                     // Apply Filter Button
                     ElevatedButton(
+                      // Apply Filter button il ulla code maattuka:
                       onPressed: () {
-                        onLocationSelected(tempCountry, tempState, tempDistrict, tempPlace);
+                        // Add these debug prints BEFORE calling onLocationSelected
+                        // print("📍 Applying filters - Country: '$tempCountry'");
+                        // print("📍 Applying filters - State: '$tempState'");
+                        // print("📍 Applying filters - District: '$tempDistrict'");
+                        // print("📍 Applying filters - Place: '$tempPlace'");
+
+                        // Call the callback with selected values
+                        onLocationSelected(
+                          tempCountry,
+                          tempState,
+                          tempDistrict,
+                          tempPlace,
+                        );
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: EdgeInsets.symmetric(
+                          vertical: screenHeight * 0.02,
+                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            screenWidth * 0.03,
+                          ),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         "Apply Filter",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.04,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: screenHeight * 0.01),
                   ],
                 ),
               ),
@@ -265,67 +399,73 @@ class LocationSection extends StatelessWidget {
     );
   }
 
+  // Fixed: These methods now properly use donors list
   List<String> _getFilteredStates(String country) {
     if (country.isEmpty) return [];
-    
-    final filteredStates = <String>[];
+
+    final filteredStates = <String>{};
     for (final donor in donors) {
       final address = donor['address'] ?? {};
       final donorCountry = address['country']?.toString().trim() ?? '';
       final state = address['state']?.toString().trim() ?? '';
-      
-      if (donorCountry == country && state.isNotEmpty && !filteredStates.contains(state)) {
+
+      if (donorCountry == country && state.isNotEmpty) {
         filteredStates.add(state);
       }
     }
-    
-    filteredStates.sort();
-    return filteredStates;
+
+    final result = filteredStates.toList();
+    result.sort();
+    return result;
   }
 
   List<String> _getFilteredDistricts(String country, String state) {
     if (country.isEmpty || state.isEmpty) return [];
-    
-    final filteredDistricts = <String>[];
+
+    final filteredDistricts = <String>{};
     for (final donor in donors) {
       final address = donor['address'] ?? {};
       final donorCountry = address['country']?.toString().trim() ?? '';
       final donorState = address['state']?.toString().trim() ?? '';
       final district = address['district']?.toString().trim() ?? '';
-      
-      if (donorCountry == country && 
-          donorState == state && 
-          district.isNotEmpty && 
-          !filteredDistricts.contains(district)) {
+
+      if (donorCountry == country &&
+          donorState == state &&
+          district.isNotEmpty) {
         filteredDistricts.add(district);
       }
     }
-    
-    filteredDistricts.sort();
-    return filteredDistricts;
+
+    final result = filteredDistricts.toList();
+    result.sort();
+    return result;
   }
 
-  List<String> _getFilteredPlaces(String country, String state, String district) {
+  List<String> _getFilteredPlaces(
+    String country,
+    String state,
+    String district,
+  ) {
     if (country.isEmpty || state.isEmpty || district.isEmpty) return [];
-    
-    final filteredPlaces = <String>[];
+
+    final filteredPlaces = <String>{};
     for (final donor in donors) {
       final address = donor['address'] ?? {};
       final donorCountry = address['country']?.toString().trim() ?? '';
       final donorState = address['state']?.toString().trim() ?? '';
       final donorDistrict = address['district']?.toString().trim() ?? '';
       final place = address['place']?.toString().trim() ?? '';
-      
-      if (donorCountry == country && 
-          donorState == state && 
-          donorDistrict == district && 
-          place.isNotEmpty && 
-          !filteredPlaces.contains(place)) {
+
+      if (donorCountry == country &&
+          donorState == state &&
+          donorDistrict == district &&
+          place.isNotEmpty) {
         filteredPlaces.add(place);
       }
     }
-    
-    filteredPlaces.sort();
-    return filteredPlaces;
+
+    final result = filteredPlaces.toList();
+    result.sort();
+    return result;
   }
 }
