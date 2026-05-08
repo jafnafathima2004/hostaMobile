@@ -36,8 +36,9 @@ void main() async {
 
   final firebaseMsg = FirebaseMsg();
   await firebaseMsg.initFCM();
+   
 
-  runApp(ProviderScope(child: const MyApp()));
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -45,32 +46,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Hosta - Healthcare',
+      debugShowCheckedModeBanner: false,
 
-    return ProviderScope(
-      child: MaterialApp(
-        title: 'Hosta - Healthcare',
-        debugShowCheckedModeBanner: false,
-        
-        theme: ThemeData(
-          primaryColor: Colors.green,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.green,
-            primary: Colors.green,
-            secondary: Colors.green,
-          ),
-          scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-            pageTransitionsTheme: const PageTransitionsTheme(
-      builders: {
-        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-      },
-    ),
+      theme: ThemeData(
+        primaryColor: Colors.green,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.green,
+          primary: Colors.green,
+          secondary: Colors.green,
         ),
-        home: const Bottomnav(),
+        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
       ),
+      home: const Bottomnav(),
     );
   }
 }
-
-
-
