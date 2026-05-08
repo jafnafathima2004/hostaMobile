@@ -12,23 +12,28 @@ class HoursTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final workingHoursClinic = hospital["working_hours_clinic"] as List?;
     final workingHours = hospital["working_hours"] as List?;
 
     if (workingHoursClinic != null && workingHoursClinic.isNotEmpty) {
-      return _buildHoursTabNewFormat(workingHoursClinic);
+      return _buildHoursTabNewFormat(workingHoursClinic, screenWidth, screenHeight);
     } else if (workingHours != null && workingHours.isNotEmpty) {
-      return _buildHoursTabOldFormat(workingHours);
+      return _buildHoursTabOldFormat(workingHours, screenWidth, screenHeight);
     } else {
-      return const Center(
-        child: Text("No working hours available", style: TextStyle(fontSize: 16)),
+      return Center(
+        child: Text(
+          "No working hours available",
+          style: TextStyle(fontSize: screenWidth * 0.04),
+        ),
       );
     }
   }
 
-  Widget _buildHoursTabNewFormat(List<dynamic> workingHoursClinic) {
+  Widget _buildHoursTabNewFormat(List<dynamic> workingHoursClinic, double screenWidth, double screenHeight) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth * 0.04),
       itemCount: workingHoursClinic.length,
       itemBuilder: (context, index) {
         final item = workingHoursClinic[index];
@@ -37,29 +42,47 @@ class HoursTab extends StatelessWidget {
         final eveningSession = item["evening_session"];
 
         return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: screenWidth * 0.005,
+          margin: EdgeInsets.only(bottom: screenHeight * 0.0125),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.03)),
           child: ListTile(
             title: Text(
               item["day"],
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 15,
+                fontSize: screenWidth * 0.0375,
                 color: isHoliday ? Colors.red : Colors.black,
               ),
             ),
             subtitle: isHoliday
-                ? const Text("Holiday", style: TextStyle(color: Colors.red))
+                ? Text(
+                    "Holiday",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: screenWidth * 0.035,
+                    ),
+                  )
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (morningSession["open"] != null && morningSession["open"].isNotEmpty)
-                        Text("🌅 Morning: ${formatTime(morningSession["open"])} - ${formatTime(morningSession["close"])}"),
+                        Text(
+                          "🌅 Morning: ${formatTime(morningSession["open"])} - ${formatTime(morningSession["close"])}",
+                          style: TextStyle(fontSize: screenWidth * 0.0325),
+                        ),
                       if (eveningSession["open"] != null && eveningSession["open"].isNotEmpty)
-                        Text("🌇 Evening: ${formatTime(eveningSession["open"])} - ${formatTime(eveningSession["close"])}"),
+                        Text(
+                          "🌇 Evening: ${formatTime(eveningSession["open"])} - ${formatTime(eveningSession["close"])}",
+                          style: TextStyle(fontSize: screenWidth * 0.0325),
+                        ),
                       if (item["has_break"] == true)
-                        const Text("⏸️ Has break time", style: TextStyle(color: Colors.orange)),
+                        Text(
+                          "⏸️ Has break time",
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: screenWidth * 0.0325,
+                          ),
+                        ),
                     ],
                   ),
           ),
@@ -68,32 +91,38 @@ class HoursTab extends StatelessWidget {
     );
   }
 
-  Widget _buildHoursTabOldFormat(List<dynamic> workingHours) {
+  Widget _buildHoursTabOldFormat(List<dynamic> workingHours, double screenWidth, double screenHeight) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth * 0.04),
       itemCount: workingHours.length,
       itemBuilder: (context, index) {
         final item = workingHours[index];
         final isHoliday = item["is_holiday"] == true;
 
         return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: screenWidth * 0.005,
+          margin: EdgeInsets.only(bottom: screenHeight * 0.0125),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.03)),
           child: ListTile(
             title: Text(
               item["day"],
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 15,
+                fontSize: screenWidth * 0.0375,
                 color: isHoliday ? Colors.red : Colors.black,
               ),
             ),
             subtitle: isHoliday
-                ? const Text("Holiday", style: TextStyle(color: Colors.red))
+                ? Text(
+                    "Holiday",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: screenWidth * 0.035,
+                    ),
+                  )
                 : Text(
                     "🕒 ${formatTime(item["opening_time"])} - ${formatTime(item["closing_time"])}",
-                    style: const TextStyle(fontSize: 13),
+                    style: TextStyle(fontSize: screenWidth * 0.0325),
                   ),
           ),
         );

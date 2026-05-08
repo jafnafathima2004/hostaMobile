@@ -29,16 +29,28 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _confirmLogout(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Are you sure you want to logout?'),
+          title: Text(
+            'Logout',
+            style: TextStyle(fontSize: screenWidth * 0.05),
+          ),
+          content: Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(fontSize: screenWidth * 0.04),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(fontSize: screenWidth * 0.04),
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -48,7 +60,10 @@ class SettingsPage extends StatelessWidget {
               style: TextButton.styleFrom(
                 foregroundColor: Colors.red,
               ),
-              child: const Text('Logout'),
+              child: Text(
+                'Logout',
+                style: TextStyle(fontSize: screenWidth * 0.04),
+              ),
             ),
           ],
         );
@@ -58,6 +73,9 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -65,24 +83,24 @@ class SettingsPage extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             color: Colors.white,
-            size: 20,
+            size: screenWidth * 0.05,
           ),
         ),
-        title: const Text(
+        title: Text(
           "Settings",
           style: TextStyle(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: screenWidth * 0.06,
             fontWeight: FontWeight.w700,
           ),
         ),
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(screenWidth * 0.05),
         child: Column(
           children: [
             // Password Manager
@@ -97,25 +115,28 @@ class SettingsPage extends StatelessWidget {
               },
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                padding: EdgeInsets.symmetric(
+                  vertical: screenHeight * 0.02,
+                  horizontal: screenWidth * 0.04,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.03),
+                  border: Border.all(color: Colors.grey[200]!, width: screenWidth * 0.0025),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(
                       Icons.lock_outline_rounded,
                       color: Colors.green,
-                      size: 24,
+                      size: screenWidth * 0.06,
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: screenWidth * 0.04),
                     Expanded(
                       child: Text(
                         "Password Manager",
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: screenWidth * 0.04,
                           fontWeight: FontWeight.w500,
                           color: Colors.black87,
                         ),
@@ -123,7 +144,7 @@ class SettingsPage extends StatelessWidget {
                     ),
                     Icon(
                       Icons.arrow_forward_ios_rounded,
-                      size: 16,
+                      size: screenWidth * 0.04,
                       color: Colors.grey,
                     ),
                   ],
@@ -131,7 +152,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 12),
+            SizedBox(height: screenHeight * 0.015),
 
             // Delete Account
             GestureDetector(
@@ -145,25 +166,28 @@ class SettingsPage extends StatelessWidget {
               },
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                padding: EdgeInsets.symmetric(
+                  vertical: screenHeight * 0.02,
+                  horizontal: screenWidth * 0.04,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.03),
+                  border: Border.all(color: Colors.grey[200]!, width: screenWidth * 0.0025),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(
                       Icons.delete_outline_rounded,
                       color: Colors.red,
-                      size: 24,
+                      size: screenWidth * 0.06,
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: screenWidth * 0.04),
                     Expanded(
                       child: Text(
                         "Delete Account",
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: screenWidth * 0.04,
                           fontWeight: FontWeight.w500,
                           color: Colors.red,
                         ),
@@ -171,7 +195,7 @@ class SettingsPage extends StatelessWidget {
                     ),
                     Icon(
                       Icons.arrow_forward_ios_rounded,
-                      size: 16,
+                      size: screenWidth * 0.04,
                       color: Colors.grey,
                     ),
                   ],
@@ -179,37 +203,40 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.025),
 
             // Divider
-            const Divider(),
+            Divider(thickness: screenWidth * 0.0025),
 
-            const SizedBox(height: 12),
+            SizedBox(height: screenHeight * 0.015),
 
             // Logout Button
             GestureDetector(
               onTap: () => _confirmLogout(context),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                padding: EdgeInsets.symmetric(
+                  vertical: screenHeight * 0.02,
+                  horizontal: screenWidth * 0.04,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red[100]!),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.03),
+                  border: Border.all(color: Colors.red[100]!, width: screenWidth * 0.0025),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(
                       Icons.logout_rounded,
                       color: Colors.red,
-                      size: 24,
+                      size: screenWidth * 0.06,
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: screenWidth * 0.04),
                     Expanded(
                       child: Text(
                         "Logout",
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: screenWidth * 0.04,
                           fontWeight: FontWeight.w500,
                           color: Colors.red,
                         ),
@@ -217,7 +244,7 @@ class SettingsPage extends StatelessWidget {
                     ),
                     Icon(
                       Icons.arrow_forward_ios_rounded,
-                      size: 16,
+                      size: screenWidth * 0.04,
                       color: Colors.grey,
                     ),
                   ],

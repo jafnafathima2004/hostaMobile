@@ -48,7 +48,7 @@ Future<Response> getAllCarousel({
 
   // GET all hospitals
   Future<Response> getAllHospitals() async {
-    return await _dio.get('/api/hospitals');
+    return await _dio.get('/api/all/hospitals');
   }
 
    // GET a hospitals

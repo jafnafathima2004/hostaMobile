@@ -12,18 +12,27 @@ class SpecialtiesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final specialties = hospital["specialties"] as List? ?? [];
     
     if (specialties.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.medical_services_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
+            Icon(
+              Icons.medical_services_outlined,
+              size: screenWidth * 0.16,
+              color: Colors.grey,
+            ),
+            SizedBox(height: screenHeight * 0.02),
             Text(
               "No specialties available",
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(
+                fontSize: screenWidth * 0.04,
+                color: Colors.grey,
+              ),
             ),
           ],
         ),
@@ -31,7 +40,7 @@ class SpecialtiesTab extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth * 0.04),
       itemCount: specialties.length,
       itemBuilder: (context, index) {
         final specialty = specialties[index];
@@ -39,14 +48,14 @@ class SpecialtiesTab extends StatelessWidget {
         final doctorsCount = (specialty["doctors"] as List? ?? []).length;
         
         return Card(
-          elevation: 3,
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: screenWidth * 0.0075,
+          margin: EdgeInsets.only(bottom: screenHeight * 0.015),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.03)),
           child: InkWell(
             onTap: () => onSpecialtyTap(specialtyName),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(screenWidth * 0.03),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(screenWidth * 0.04),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -56,60 +65,75 @@ class SpecialtiesTab extends StatelessWidget {
                       Expanded(
                         child: Text(
                           specialtyName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold, 
-                            fontSize: 16,
-                            color: Color.fromARGB(255, 12, 94, 15),
+                            fontSize: screenWidth * 0.04,
+                            color: const Color.fromARGB(255, 12, 94, 15),
                           ),
                         ),
                       ),
-                      const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: screenWidth * 0.04,
+                        color: Colors.grey,
+                      ),
                     ],
                   ),
                   
                   if (specialty["description"] != null && specialty["description"].isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: EdgeInsets.only(top: screenHeight * 0.01),
                       child: Text(
                         specialty["description"],
+                        style: TextStyle(fontSize: screenWidth * 0.035),
                       ),
                     ),
                   
                   if (specialty["department_info"] != null && specialty["department_info"].isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: EdgeInsets.only(top: screenHeight * 0.005),
                       child: Text(
                         "Department: ${specialty["department_info"]}",
-                        style: const TextStyle(color: Colors.blueGrey, fontSize: 12),
+                        style: TextStyle(
+                          color: Colors.blueGrey,
+                          fontSize: screenWidth * 0.03,
+                        ),
                       ),
                     ),
                   
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: EdgeInsets.only(top: screenHeight * 0.01),
                     child: Row(
                       children: [
-                        Icon(Icons.medical_services, size: 14, color: Colors.green),
-                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.medical_services,
+                          size: screenWidth * 0.035,
+                          color: Colors.green,
+                        ),
+                        SizedBox(width: screenWidth * 0.01),
                         Text(
                           "$doctorsCount doctors available",
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.green,
                             fontWeight: FontWeight.w500,
-                            fontSize: 12,
+                            fontSize: screenWidth * 0.03,
                           ),
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.02,
+                            vertical: screenHeight * 0.0025,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.green[50],
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(screenWidth * 0.03),
                           ),
-                          child: const Text(
+                          child: Text(
                             "View Doctors",
                             style: TextStyle(
                               color: Colors.green,
-                              fontSize: 10,
+                              fontSize: screenWidth * 0.025,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

@@ -7,32 +7,42 @@ class AmbulanceDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final state = ref.watch(ambulanceProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Ambulance Details",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: screenWidth * 0.05,
+          ),
         ),
         backgroundColor: Colors.green,
         centerTitle: true,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: screenWidth * 0.055,
+          ),
         ),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(screenWidth * 0.02),
               child: Container(
                 width: double.infinity,
-                height: 220,
+                height: screenHeight * 0.28,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
                   image: const DecorationImage(
                     image: AssetImage("assets/ambulance.jpg"),
                     fit: BoxFit.cover,
@@ -41,17 +51,17 @@ class AmbulanceDetailsPage extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: screenHeight * 0.02),
 
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(screenWidth * 0.04),
               child: Column(
                 children: [
-                  _buildInfoCard(context, ref),
-                  const SizedBox(height: 16),
-                  _buildFacilityCard(),
-                  const SizedBox(height: 16),
-                  _buildActionButtons(),
+                  _buildInfoCard(context, ref, screenWidth, screenHeight),
+                  SizedBox(height: screenHeight * 0.02),
+                  _buildFacilityCard(screenWidth, screenHeight),
+                  SizedBox(height: screenHeight * 0.02),
+                  _buildActionButtons(screenWidth),
                 ],
               ),
             ),
@@ -61,18 +71,18 @@ class AmbulanceDetailsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoCard(BuildContext context, WidgetRef ref) {
+  Widget _buildInfoCard(BuildContext context, WidgetRef ref, double screenWidth, double screenHeight) {
     final state = ref.watch(ambulanceProvider);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth * 0.04),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(screenWidth * 0.04),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            blurRadius: screenWidth * 0.025,
           ),
         ],
       ),
@@ -82,13 +92,19 @@ class AmbulanceDetailsPage extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 "KL-11-AB-1234",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: screenWidth * 0.045,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Row(
                 children: [
-                  Text(state.isAvailable ? "Available" : "Not Available"),
+                  Text(
+                    state.isAvailable ? "Available" : "Not Available",
+                    style: TextStyle(fontSize: screenWidth * 0.035),
+                  ),
                   Switch(
                     value: state.isAvailable,
                     onChanged: (val) {
@@ -101,41 +117,63 @@ class AmbulanceDetailsPage extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          const Text("Type: ICU"),
-          const Text("Driver: Rahman"),
-          const Text("Phone: 9876543210"),
-          const Text("Location: Calicut"),
+          SizedBox(height: screenHeight * 0.0125),
+          Text(
+            "Type: ICU",
+            style: TextStyle(fontSize: screenWidth * 0.04),
+          ),
+          Text(
+            "Driver: Rahman",
+            style: TextStyle(fontSize: screenWidth * 0.04),
+          ),
+          Text(
+            "Phone: 9876543210",
+            style: TextStyle(fontSize: screenWidth * 0.04),
+          ),
+          Text(
+            "Location: Calicut",
+            style: TextStyle(fontSize: screenWidth * 0.04),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildFacilityCard() {
+  Widget _buildFacilityCard(double screenWidth, double screenHeight) {
     final facilities = ["Oxygen", "Ventilator", "Stretcher"];
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth * 0.04),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(screenWidth * 0.04),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: screenWidth * 0.025,
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             "Facilities",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: screenWidth * 0.04,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: screenHeight * 0.0125),
           Wrap(
-            spacing: 8,
+            spacing: screenWidth * 0.02,
+            runSpacing: screenHeight * 0.01,
             children: facilities
                 .map((f) => Chip(
-                      label: Text(f),
+                      label: Text(
+                        f,
+                        style: TextStyle(fontSize: screenWidth * 0.035),
+                      ),
                       backgroundColor: Colors.red.shade50,
                     ))
                 .toList(),
@@ -145,13 +183,17 @@ class AmbulanceDetailsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(double screenWidth) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
-      children: const [
-        Icon(Icons.edit, color: Colors.black),
-        SizedBox(width: 10),
-        Icon(Icons.delete_forever_rounded, color: Colors.black),
+      children: [
+        Icon(Icons.edit, color: Colors.black, size: screenWidth * 0.06),
+        SizedBox(width: screenWidth * 0.025),
+        Icon(
+          Icons.delete_forever_rounded,
+          color: Colors.black,
+          size: screenWidth * 0.06,
+        ),
       ],
     );
   }
