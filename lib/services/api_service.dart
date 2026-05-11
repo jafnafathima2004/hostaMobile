@@ -1,9 +1,13 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 // import 'package:hosta/data/specialty_data.dart';
 import 'dart:io';
 
 class ApiService {
-  final Dio _dio = Dio(BaseOptions(baseUrl: 'https://www.zorrowtek.in'));
+  final Dio _dio = Dio(BaseOptions(baseUrl: 
+  'http://13.60.233.228:3000/api'
+  ));
 // http://10.0.2.2:3000
 // https://www.zorrowtek.in
 
@@ -48,12 +52,19 @@ Future<Response> getAllCarousel({
 
   // GET all hospitals
   Future<Response> getAllHospitals() async {
-    return await _dio.get('/api/all/hospitals');
+    return await _dio.get(
+    '/api/all/hospitals'
+      // "/hospital"
+      );
+
   }
 
    // GET a hospitals
   Future<Response> getAHospitals(String id) async {
-    return await _dio.get('/api/hospitals/$id');
+    return await _dio.get(
+      '/api/hospitals/$id'
+      // "/hospital/$id"
+      );
   }
 
 
@@ -111,25 +122,55 @@ Future<Response> getAllCarousel({
 
   // LOGIN
   Future<Response> loginUser(Map<String, dynamic> data) async {
-    return await _dio.post('/api/users/login/phone', data: data);
+    return await _dio.post(
+     // '/api/users/login/phone'
+"/users/login/phone"
+      , data: data);
   }
 
   // OTP
+  // SEND OTP
+// Future<Response> sendOtp(Map<String, dynamic> data) async {
+//   return await _dio.post(
+//     '/users/auth/send-otp',
+//     data: data,
+//   );
+// }
+
+// // VERIFY OTP
+// Future<Response> verifyOtp(Map<String, dynamic> data) async {
+//   return await _dio.post(
+//     '/users/auth/verify-otp',
+//     data: data,
+//   );
+// }
   Future<Response> otpUser(Map<String, dynamic> data) async {
-    return await _dio.post('/api/users/otp', data: data);
+    return await _dio.post(
+      //'/api/users/otp'
+      "/users/otp"
+      , data: data);
   }
 
   // SIGNUP
   Future<Response> signupUser(Map<String, dynamic> data) async {
-    return await _dio.post('/api/users/registeration', data: data);
+    return await _dio.post(
+      //'/api/users/registeration'
+      "/users"
+      , data: data);
   }
 
     Future<Response> getAUser(String id) async {
-    return await _dio.get('/api/users/$id');
+    return await _dio.get(
+      //'/api/users/$id'
+      "/users/$id"
+      );
   }
 
     Future<Response> deleteAUser(String id) async {
-    return await _dio.delete('/api/users/$id');
+    return await _dio.delete(
+      //'/api/users/$id'
+      "/users/$id"
+      );
   }
 
   // Update user

@@ -11,14 +11,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpVerification extends StatefulWidget {
   final String phone;
-  final String? backendOtp;
+  final String? verificationId; // CHANGE THIS: from backendOtp to verificationId
   final VoidCallback onResendOtp;
   final ApiService apiService;
 
   const OtpVerification({
     super.key,
     required this.phone,
-    this.backendOtp,
+    this.verificationId, // CHANGE THIS
     required this.onResendOtp,
     required this.apiService,
   });
@@ -37,18 +37,7 @@ class _OtpVerificationState extends State<OtpVerification> {
   @override
   void initState() {
     super.initState();
-    if (widget.backendOtp != null) {
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        if (mounted && otpController.text.isEmpty) {
-          otpController.text = widget.backendOtp!;
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted && otpController.text.length == 6) {
-              // Will be handled by the UI
-            }
-          });
-        }
-      });
-    }
+    _startResendTimer(); // Moved timer here
   }
 
   void _startResendTimer() {
@@ -80,20 +69,35 @@ class _OtpVerificationState extends State<OtpVerification> {
     try {
       String? token = await FirebaseMsg().token;
 
-      final response = await widget.apiService.otpUser({
+      // CHANGED: Use verifyOtp with verificationId
+      final Map<String, dynamic> requestData = {
         "phone": widget.phone,
         "otp": otp,
         "FcmToken": token,
-      });
+      };
+      
+      // Add verificationId if available
+      if (widget.verificationId != null) {
+        requestData['verificationId'] = widget.verificationId;
+      }
 
-      if (response.statusCode == 200 && response.data["status"] == 200) {
-        final userId = response.data["userDetails"]["_id"];
-        final userPhone = response.data["userDetails"]["phone"];
-        final donorId = response.data["userDetails"]["donorId"];
+      final response = await widget.apiService.otpUser(requestData);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final userData = response.data['userDetails'] ?? response.data;
+        
+        final userId = userData['_id'] ?? userData['id'];
+        final userPhone = userData['phone'] ?? widget.phone;
+        final donorId = userData['donorId'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userId', userId);
         await prefs.setString('userPhone', userPhone);
+
+        // Store token if returned
+        if (response.data['token'] != null) {
+          await prefs.setString('authToken', response.data['token']);
+        }
 
         if (donorId != null && donorId.toString().isNotEmpty) {
           await prefs.setString('bloodId', donorId.toString());
@@ -117,7 +121,9 @@ class _OtpVerificationState extends State<OtpVerification> {
       String errorMessage = "Something went wrong";
       if (dioError.response != null) {
         try {
-          errorMessage = dioError.response?.data['message'] ?? errorMessage;
+          errorMessage = dioError.response?.data['message'] ?? 
+                        dioError.response?.data['error'] ?? 
+                        errorMessage;
         } catch (_) {}
       }
       setState(() {
@@ -125,6 +131,7 @@ class _OtpVerificationState extends State<OtpVerification> {
         isVerifying = false;
       });
     } catch (e) {
+      log("OTP Verification Error: $e");
       setState(() {
         otpError = "Invalid OTP. Please try again.";
         isVerifying = false;
@@ -134,8 +141,6 @@ class _OtpVerificationState extends State<OtpVerification> {
 
   @override
   Widget build(BuildContext context) {
-    _startResendTimer();
-    
     double screenWidth = MediaQuery.of(context).size.width;
     
     return Dialog(
@@ -177,69 +182,61 @@ class _OtpVerificationState extends State<OtpVerification> {
             ),
             const SizedBox(height: 24),
 
-            TweenAnimationBuilder(
-              tween: Tween<double>(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeOut,
-              builder: (context, double opacity, child) {
-                return Opacity(opacity: opacity, child: child);
-              },
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  double fieldWidth = (constraints.maxWidth - 40) / 6;
+            LayoutBuilder(
+              builder: (context, constraints) {
+                double fieldWidth = (constraints.maxWidth - 40) / 6;
 
-                  return PinCodeTextField(
-                    appContext: context,
-                    length: 6,
-                    controller: otpController,
-                    keyboardType: TextInputType.number,
-                    animationType: AnimationType.fade,
-                    animationDuration: const Duration(
-                      milliseconds: 300,
-                    ),
-                    autoDismissKeyboard: true,
-                    enablePinAutofill: true,
-                    autoFocus: true,
-                    textStyle: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    pinTheme: PinTheme(
-                      shape: PinCodeFieldShape.box,
-                      borderRadius: BorderRadius.circular(12),
-                      fieldHeight: 55,
-                      fieldWidth: fieldWidth.clamp(35, 50),
-                      activeFillColor: Colors.white,
-                      selectedFillColor: Colors.white,
-                      inactiveFillColor: Colors.grey[50],
-                      activeColor: otpError != null ? Colors.red : Colors.green,
-                      selectedColor: otpError != null ? Colors.red : Colors.blue,
-                      inactiveColor: otpError != null ? Colors.red : Colors.grey[300]!,
-                      borderWidth: 2,
-                    ),
-                    onCompleted: (value) {
-                      if (!isVerifying) {
-                        _verifyOtp();
-                      }
-                    },
-                    onChanged: (value) {
-                      if (otpError != null) {
-                        setState(() {
-                          otpError = null;
-                        });
-                      }
-                      if (value.length == 6 && !isVerifying && !isOtpFilled) {
-                        setState(() => isOtpFilled = true);
-                        Future.delayed(const Duration(milliseconds: 800), () {
-                          if (mounted && !isVerifying) {
-                            _verifyOtp();
-                          }
-                        });
-                      }
-                    },
-                  );
-                },
-              ),
+                return PinCodeTextField(
+                  appContext: context,
+                  length: 6,
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  animationType: AnimationType.fade,
+                  animationDuration: const Duration(
+                    milliseconds: 300,
+                  ),
+                  autoDismissKeyboard: true,
+                  enablePinAutofill: true,
+                  autoFocus: true,
+                  textStyle: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  pinTheme: PinTheme(
+                    shape: PinCodeFieldShape.box,
+                    borderRadius: BorderRadius.circular(12),
+                    fieldHeight: 55,
+                    fieldWidth: fieldWidth.clamp(35, 50),
+                    activeFillColor: Colors.white,
+                    selectedFillColor: Colors.white,
+                    inactiveFillColor: Colors.grey[50],
+                    activeColor: otpError != null ? Colors.red : Colors.green,
+                    selectedColor: otpError != null ? Colors.red : Colors.blue,
+                    inactiveColor: otpError != null ? Colors.red : Colors.grey[300]!,
+                    borderWidth: 2,
+                  ),
+                  onCompleted: (value) {
+                    if (!isVerifying) {
+                      _verifyOtp();
+                    }
+                  },
+                  onChanged: (value) {
+                    if (otpError != null) {
+                      setState(() {
+                        otpError = null;
+                      });
+                    }
+                    if (value.length == 6 && !isVerifying && !isOtpFilled) {
+                      setState(() => isOtpFilled = true);
+                      Future.delayed(const Duration(milliseconds: 800), () {
+                        if (mounted && !isVerifying) {
+                          _verifyOtp();
+                        }
+                      });
+                    }
+                  },
+                );
+              },
             ),
 
             if (otpError != null)
@@ -348,5 +345,11 @@ class _OtpVerificationState extends State<OtpVerification> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    otpController.dispose();
+    super.dispose();
   }
 }

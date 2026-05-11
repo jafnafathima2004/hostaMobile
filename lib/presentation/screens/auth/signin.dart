@@ -52,149 +52,236 @@ class _SigninState extends State<Signin> {
     return true;
   }
 
-  Future<void> _sendOtp() async {
-    String phone = phoneController.text.trim();
+Future<void> _sendOtp() async {
+  String phone = phoneController.text.trim();
 
-    if (!_validatePhoneNumber(phone)) {
-      return;
-    }
-
-    try {
-      setState(() => isSendingOtp = true);
-
-      final response = await _apiService.loginUser({"phone": phone});
-      log("status:${response.statusCode}");
-      log("Data:${response.data}");
-
-      setState(() => isSendingOtp = false);
-
-      if (response.statusCode == 200 && response.data["status"] == 200) {
-        final backendOtp = response.data["otp"]?.toString();
-        if (backendOtp != null && backendOtp.length == 6) {
-          setState(() {
-            receivedOtp = backendOtp;
-          });
-          _showLoadingAndThenOtp(phone, backendOtp);
-        } else {
-          _showOtpPopup(phone, null);
-        }
-      } else {
-        _showOtpPopup(phone, null);
-      }
-    } on DioException catch (dioError) {
-      setState(() => isSendingOtp = false);
-
-      String errorMessage = "Something went wrong";
-
-      if (dioError.response != null) {
-        try {
-          errorMessage = dioError.response?.data['message'] ?? errorMessage;
-        } catch (_) {}
-      }
-
-      if (errorMessage.toLowerCase().contains('phone') ||
-          errorMessage.toLowerCase().contains('number')) {
-        setState(() {
-          phoneError = errorMessage;
-        });
-      } else {
-        showTopSnackBar(context, errorMessage, isError: true);
-      }
-    } catch (e) {
-      setState(() => isSendingOtp = false);
-      showTopSnackBar(context, "Failed to send OTP: $e", isError: true);
-    }
+  if (!_validatePhoneNumber(phone)) {
+    return;
   }
 
-  void _showLoadingAndThenOtp(String phone, String backendOtp) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (loadingContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 20),
-                TweenAnimationBuilder(
-                  tween: Tween<double>(begin: 0, end: 1),
-                  duration: const Duration(milliseconds: 1500),
-                  builder: (context, double value, child) {
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: CircularProgressIndicator(
-                            value: value,
-                            strokeWidth: 3,
-                            backgroundColor: Colors.grey[200],
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              Colors.green,
-                            ),
+  try {
+    setState(() => isSendingOtp = true);
+
+    // FIXED: Use sendOtp instead of loginUser
+    final response = await _apiService.otpUser({"phone": phone});
+    log("status:${response.statusCode}");
+    log("Data:${response.data}");
+
+    setState(() => isSendingOtp = false);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // Store verificationId if returned
+      String? verificationId = response.data['verificationId'];
+      
+      _showLoadingAndThenOtp(phone, verificationId);
+    } else {
+      String errorMsg = response.data['message'] ?? 'Failed to send OTP';
+      showTopSnackBar(context, errorMsg, isError: true);
+    }
+  } on DioException catch (dioError) {
+    setState(() => isSendingOtp = false);
+
+    String errorMessage = "Something went wrong";
+
+    if (dioError.response != null) {
+      try {
+        errorMessage = dioError.response?.data['message'] ?? errorMessage;
+      } catch (_) {}
+    }
+
+    if (errorMessage.toLowerCase().contains('phone') ||
+        errorMessage.toLowerCase().contains('number')) {
+      setState(() {
+        phoneError = errorMessage;
+      });
+    } else {
+      showTopSnackBar(context, errorMessage, isError: true);
+    }
+  } catch (e) {
+    setState(() => isSendingOtp = false);
+    showTopSnackBar(context, "Failed to send OTP: $e", isError: true);
+  }
+}
+
+void _showLoadingAndThenOtp(String phone, String? verificationId) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (loadingContext) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 20),
+              TweenAnimationBuilder(
+                tween: Tween<double>(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 1500),
+                builder: (context, double value, child) {
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        height: 80,
+                        child: CircularProgressIndicator(
+                          value: value,
+                          strokeWidth: 3,
+                          backgroundColor: Colors.grey[200],
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Colors.green,
                           ),
                         ),
-                        const Icon(
-                          Icons.mark_email_read_rounded,
-                          size: 35,
-                          color: Colors.green,
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  "Sending OTP",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "We're sending a 6-digit code to\n${phoneController.text}",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
+                      ),
+                      const Icon(
+                        Icons.mark_email_read_rounded,
+                        size: 35,
+                        color: Colors.green,
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                "Sending OTP",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "We're sending a 6-digit code to\n${phoneController.text}",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
 
-    Future.delayed(const Duration(milliseconds: 2000), () {
-      if (mounted) {
-        Navigator.pop(context);
-        _showOtpPopup(phone, backendOtp);
-      }
-    });
-  }
+  Future.delayed(const Duration(milliseconds: 2000), () {
+    if (mounted) {
+      Navigator.pop(context);
+      _showOtpPopup(phone, verificationId);
+    }
+  });
+}
 
-  void _showOtpPopup(String phone, String? backendOtp) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return OtpVerification(
-          phone: phone,
-          backendOtp: backendOtp,
-          apiService: _apiService,
-          onResendOtp: () {
-            _sendOtp();
-          },
-        );
-      },
-    );
-  }
+void _showOtpPopup(String phone, String? verificationId) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) {
+      return OtpVerification(
+        phone: phone,
+        verificationId: verificationId, // Pass verificationId
+        apiService: _apiService,
+        onResendOtp: () {
+          _sendOtp();
+        },
+      );
+    },
+  );
+}
+
+  // void _showLoadingAndThenOtp(String phone, String backendOtp) {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (loadingContext) {
+  //       return Dialog(
+  //         backgroundColor: Colors.transparent,
+  //         elevation: 0,
+  //         child: Container(
+  //           padding: const EdgeInsets.all(20),
+  //           decoration: BoxDecoration(
+  //             color: Colors.white,
+  //             borderRadius: BorderRadius.circular(20),
+  //           ),
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               const SizedBox(height: 20),
+  //               TweenAnimationBuilder(
+  //                 tween: Tween<double>(begin: 0, end: 1),
+  //                 duration: const Duration(milliseconds: 1500),
+  //                 builder: (context, double value, child) {
+  //                   return Stack(
+  //                     alignment: Alignment.center,
+  //                     children: [
+  //                       SizedBox(
+  //                         width: 80,
+  //                         height: 80,
+  //                         child: CircularProgressIndicator(
+  //                           value: value,
+  //                           strokeWidth: 3,
+  //                           backgroundColor: Colors.grey[200],
+  //                           valueColor: const AlwaysStoppedAnimation<Color>(
+  //                             Colors.green,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                       const Icon(
+  //                         Icons.mark_email_read_rounded,
+  //                         size: 35,
+  //                         color: Colors.green,
+  //                       ),
+  //                     ],
+  //                   );
+  //                 },
+  //               ),
+  //               const SizedBox(height: 24),
+  //               const Text(
+  //                 "Sending OTP",
+  //                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+  //               ),
+  //               const SizedBox(height: 8),
+  //               Text(
+  //                 "We're sending a 6-digit code to\n${phoneController.text}",
+  //                 textAlign: TextAlign.center,
+  //                 style: TextStyle(color: Colors.grey[600], fontSize: 14),
+  //               ),
+  //               const SizedBox(height: 20),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+
+  //   Future.delayed(const Duration(milliseconds: 2000), () {
+  //     if (mounted) {
+  //       Navigator.pop(context);
+  //       _showOtpPopup(phone, backendOtp);
+  //     }
+  //   });
+  // }
+
+  // void _showOtpPopup(String phone, String? backendOtp) {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (dialogContext) {
+  //       return OtpVerification(
+  //         phone: phone,
+  //        backendOtp: backendOtp,
+  //         apiService: _apiService,
+  //         onResendOtp: () {
+  //           _sendOtp();
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
