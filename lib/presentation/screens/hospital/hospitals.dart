@@ -48,9 +48,11 @@ class _HospitalsState extends State<Hospitals> {
   }
 
   Future<void> _ensureLocationEnabled() async {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      _showLocationDialog("Please enable your location services.");
+      _showLocationDialog("Please enable your location services.", screenWidth);
       return;
     }
 
@@ -58,14 +60,14 @@ class _HospitalsState extends State<Hospitals> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        _showLocationDialog("Location permission denied.");
+        _showLocationDialog("Location permission denied.", screenWidth);
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       _showLocationDialog(
-          "Location permission permanently denied. Enable it from app settings.");
+          "Location permission permanently denied. Enable it from app settings.", screenWidth);
       return;
     }
 
@@ -74,16 +76,25 @@ class _HospitalsState extends State<Hospitals> {
     setState(() => userPosition = pos);
   }
 
-  void _showLocationDialog(String message) {
+  void _showLocationDialog(String message, double screenWidth) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Location Required"),
-        content: Text(message),
+        title: Text(
+          "Location Required",
+          style: TextStyle(fontSize: screenWidth * 0.045),
+        ),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: screenWidth * 0.04),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
+            child: Text(
+              "OK",
+              style: TextStyle(fontSize: screenWidth * 0.04),
+            ),
           ),
         ],
       ),
@@ -260,10 +271,18 @@ class _HospitalsState extends State<Hospitals> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     if (isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFECFDF5),
-        body: Center(child: CircularProgressIndicator(color: Colors.green)),
+      return Scaffold(
+        backgroundColor: const Color(0xFFECFDF5),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Colors.green,
+            strokeWidth: screenWidth * 0.008,
+          ),
+        ),
       );
     }
 
@@ -295,15 +314,19 @@ class _HospitalsState extends State<Hospitals> {
         backgroundColor: Colors.green,
         title: Text(
           "${widget.type} Hospitals",
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold, 
             color: Colors.white,
-            fontSize: 20,
+            fontSize: screenWidth * 0.05,
           ),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: screenWidth * 0.055,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -313,33 +336,50 @@ class _HospitalsState extends State<Hospitals> {
           children: [
             // --- Search Box ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04,
+                vertical: screenHeight * 0.015,
+              ),
               child: TextField(
                 onChanged: (value) => setState(() => searchQuery = value),
                 decoration: InputDecoration(
                   hintText: "Search hospitals...",
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  hintStyle: TextStyle(fontSize: screenWidth * 0.035),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.grey,
+                    size: screenWidth * 0.06,
+                  ),
                   filled: true,
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
+                    borderRadius: BorderRadius.circular(screenWidth * 0.03),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.0125),
                 ),
               ),
             ),
 
             // --- Filter Chips ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04,
+                vertical: screenHeight * 0.01,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   FilterChip(
-                    label: const Text("Nearest"),
+                    label: Text(
+                      "Nearest",
+                      style: TextStyle(fontSize: screenWidth * 0.035),
+                    ),
                     selected: filterNearest,
                     selectedColor: Colors.green,
                     labelStyle: TextStyle(
-                        color: filterNearest ? Colors.white : Colors.black),
+                        color: filterNearest ? Colors.white : Colors.black,
+                        fontSize: screenWidth * 0.035),
                     onSelected: (val) async {
                       if (val) {
                         await _ensureLocationEnabled();
@@ -350,11 +390,15 @@ class _HospitalsState extends State<Hospitals> {
                     },
                   ),
                   FilterChip(
-                    label: const Text("Open Now"),
+                    label: Text(
+                      "Open Now",
+                      style: TextStyle(fontSize: screenWidth * 0.035),
+                    ),
                     selected: filterOpenNow,
                     selectedColor: Colors.green,
                     labelStyle: TextStyle(
-                        color: filterOpenNow ? Colors.white : Colors.black),
+                        color: filterOpenNow ? Colors.white : Colors.black,
+                        fontSize: screenWidth * 0.035),
                     onSelected: (val) =>
                         setState(() => filterOpenNow = val),
                   ),
@@ -365,14 +409,14 @@ class _HospitalsState extends State<Hospitals> {
             // --- Results Count ---
             if (searchQuery.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
                 child: Row(
                   children: [
                     Text(
                       "${filteredHospitals.length} result${filteredHospitals.length == 1 ? '' : 's'} for \"$searchQuery\"",
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.grey,
-                        fontSize: 14,
+                        fontSize: screenWidth * 0.035,
                       ),
                     ),
                   ],
@@ -382,13 +426,13 @@ class _HospitalsState extends State<Hospitals> {
             // --- List ---
             Expanded(
               child: filteredHospitals.isEmpty
-                  ? _buildEmptyState()
+                  ? _buildEmptyState(screenWidth, screenHeight)
                   : ListView.builder(
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(screenWidth * 0.03),
                       itemCount: filteredHospitals.length,
                       itemBuilder: (context, index) => InkWell(
                         onTap: () => _navigateToHospitalDetails(filteredHospitals[index]),
-                        child: _buildHospitalCard(filteredHospitals[index]),
+                        child: _buildHospitalCard(filteredHospitals[index], screenWidth, screenHeight),
                       ),
                     ),
             ),
@@ -398,33 +442,43 @@ class _HospitalsState extends State<Hospitals> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(double screenWidth, double screenHeight) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.search_off, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text(
+          Icon(Icons.search_off, size: screenWidth * 0.16, color: Colors.grey),
+          SizedBox(height: screenHeight * 0.02),
+          Text(
             "No hospitals found",
-            style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: screenWidth * 0.045,
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
           Text(
             searchQuery.isEmpty
                 ? "Try adjusting your filters"
                 : "No results for \"$searchQuery\"",
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(
+              fontSize: screenWidth * 0.035,
+              color: Colors.grey,
+            ),
             textAlign: TextAlign.center,
           ),
           if (searchQuery.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 16),
+              padding: EdgeInsets.only(top: screenHeight * 0.02),
               child: TextButton(
                 onPressed: () => setState(() => searchQuery = ''),
-                child: const Text(
+                child: Text(
                   "Clear search",
-                  style: TextStyle(color: Colors.green),
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: screenWidth * 0.035,
+                  ),
                 ),
               ),
             ),
@@ -433,7 +487,7 @@ class _HospitalsState extends State<Hospitals> {
     );
   }
 
-  Widget _buildHospitalCard(dynamic hospital) {
+  Widget _buildHospitalCard(dynamic hospital, double screenWidth, double screenHeight) {
     final imageUrl = hospital["image"]?["imageUrl"] ?? "";
     final name = hospital["name"] ?? "Unknown Hospital";
     final address = hospital["address"] ?? "";
@@ -444,27 +498,27 @@ class _HospitalsState extends State<Hospitals> {
     final isOpen = _isOpenNow(hospital);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: screenHeight * 0.015),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(screenWidth * 0.035),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 3)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(screenWidth * 0.035)),
             child: imageUrl.isNotEmpty
                 ? Image.network(
                     imageUrl,
-                    height: 180,
+                    height: screenHeight * 0.22,
                     width: double.infinity,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Image.asset(
                         'images/hospital.jpg',
-                        height: 180,
+                        height: screenHeight * 0.22,
                         width: double.infinity,
                         fit: BoxFit.cover,
                       );
@@ -472,39 +526,56 @@ class _HospitalsState extends State<Hospitals> {
                   )
                 : Image.asset(
                     'images/hospital.jpg',
-                    height: 180,
+                    height: screenHeight * 0.22,
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(screenWidth * 0.03),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.04,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 if (distance != null)
-                  Text("${distance.toStringAsFixed(1)} km away",
-                      style: const TextStyle(color: Colors.blueGrey)),
-                const SizedBox(height: 6),
-                Text(address),
-                const SizedBox(height: 6),
+                  Text(
+                    "${distance.toStringAsFixed(1)} km away",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.035,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                SizedBox(height: screenHeight * 0.0075),
+                Text(
+                  address,
+                  style: TextStyle(fontSize: screenWidth * 0.035),
+                ),
+                SizedBox(height: screenHeight * 0.0075),
                 Row(
                   children: [
-                    Icon(Icons.circle,
-                        color: isOpen ? Colors.green : Colors.red, size: 10),
-                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.circle,
+                      color: isOpen ? Colors.green : Colors.red,
+                      size: screenWidth * 0.025,
+                    ),
+                    SizedBox(width: screenWidth * 0.015),
                     Text(
                       isOpen ? "Open Now" : "Closed",
                       style: TextStyle(
-                          color: isOpen ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.w500),
+                        color: isOpen ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.w500,
+                        fontSize: screenWidth * 0.035,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: screenHeight * 0.01),
               ],
             ),
           ),

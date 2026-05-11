@@ -408,9 +408,10 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:hosta/data/models/doctor_model.dart';
 
 class DoctorDetailScreen extends StatefulWidget {
-  const DoctorDetailScreen({super.key});
+  const DoctorDetailScreen({super.key, required Doctor doctor});
 
   @override
   State<DoctorDetailScreen> createState() => _DoctorDetailScreenState();

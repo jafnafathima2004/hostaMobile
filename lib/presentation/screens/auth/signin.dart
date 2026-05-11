@@ -438,6 +438,67 @@ class _SigninState extends State<Signin> {
 
   Future<void> _sendOtp() async {
     String phone = phoneController.text.trim();
+    
+
+
+    
+Future<void> _sendOtp() async {
+  String rawPhone = phoneController.text.trim();
+  
+  // ✅ Add this phone cleaning logic
+  String phone = rawPhone
+      .replaceAll('+', '')
+      .replaceAll(' ', '')
+      .replaceAll('-', '');
+  
+  // Remove +91 or 91 if present
+  if (phone.startsWith('91') && phone.length == 12) {
+    phone = phone.substring(2);
+  }
+  
+  // ✅ Check if it's exactly 10 digits
+  if (phone.length != 10) {
+    setState(() {
+      phoneError = "Enter 10-digit mobile number";
+    });
+    return;
+  }
+  
+  setState(() {
+    phoneError = null;
+    isSendingOtp = true;
+  });
+  
+  try {
+    // ✅ Send cleaned phone number (10 digits only)
+    final response = await _apiService.loginUser({"phone": phone});
+    
+    log("status:${response.statusCode}");
+    log("Data:${response.data}");
+    
+    setState(() => isSendingOtp = false);
+    
+    if (response.statusCode == 200 && response.data["status"] == 200) {
+      final backendOtp = response.data["otp"]?.toString();
+      if (backendOtp != null && backendOtp.length == 6) {
+        setState(() {
+          receivedOtp = backendOtp;
+        });
+        _showLoadingAndThenOtp(phone, backendOtp);
+      } else {
+        _showOtpPopup(phone, null);
+      }
+    } else {
+      _showOtpPopup(phone, null);
+    }
+  } on DioException catch (dioError) {
+    setState(() => isSendingOtp = false);
+    // ... rest of error handling
+  }
+}
+
+
+
 
     if (!_validatePhoneNumber(phone)) {
       return;

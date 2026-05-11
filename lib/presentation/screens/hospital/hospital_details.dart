@@ -241,6 +241,9 @@ class _HospitalDetailsPageState extends ConsumerState<HospitalDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     // Watch for hospital details changes
     final hospitalDetailsAsync = ref.watch(hospitalDetailsProvider(widget.hospitalId));
     final reviewsAsync = ref.watch(hospitalReviewsProvider(widget.hospitalId));
@@ -248,8 +251,13 @@ class _HospitalDetailsPageState extends ConsumerState<HospitalDetailsPage> {
     final userState = ref.watch(userProvider);
 
     if (isLoading || userState.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: Colors.green)),
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Colors.green,
+            strokeWidth: screenWidth * 0.008,
+          ),
+        ),
       );
     }
 
@@ -266,17 +274,17 @@ class _HospitalDetailsPageState extends ConsumerState<HospitalDetailsPage> {
               Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(screenWidth * 0.05)),
                     child: imageUrl.isNotEmpty
                         ? Image.network(
                             imageUrl,
-                            height: 270,
+                            height: screenHeight * 0.33,
                             width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Image.asset(
                                 'images/hospital.jpg',
-                                height: 270,
+                                height: screenHeight * 0.33,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
                               );
@@ -284,18 +292,23 @@ class _HospitalDetailsPageState extends ConsumerState<HospitalDetailsPage> {
                           )
                         : Image.asset(
                             'images/hospital.jpg',
-                            height: 270,
+                            height: screenHeight * 0.33,
                             width: double.infinity,
                             fit: BoxFit.cover,
                           ),
                   ),
                   Positioned(
-                    top: 12,
-                    left: 12,
+                    top: screenHeight * 0.015,
+                    left: screenWidth * 0.03,
                     child: CircleAvatar(
                       backgroundColor: Colors.black45,
+                      radius: screenWidth * 0.06,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 26),
+                        icon: Icon(
+                          Icons.arrow_back_ios_new,
+                          color: Colors.white,
+                          size: screenWidth * 0.065,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -304,14 +317,18 @@ class _HospitalDetailsPageState extends ConsumerState<HospitalDetailsPage> {
               ),
 
               // Tabs
-              const SizedBox(height: 8),
-              const TabBar(
+              SizedBox(height: screenHeight * 0.01),
+              TabBar(
                 isScrollable: true,
                 labelColor: Colors.green,
                 unselectedLabelColor: Colors.black,
                 indicatorColor: Colors.green,
-                labelStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                tabs: [
+                labelStyle: TextStyle(
+                  fontSize: screenWidth * 0.0375,
+                  fontWeight: FontWeight.bold,
+                ),
+                unselectedLabelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                tabs: const [
                   Tab(text: "Information"),
                   Tab(text: "Specialties"),
                   Tab(text: "Working Hours"),

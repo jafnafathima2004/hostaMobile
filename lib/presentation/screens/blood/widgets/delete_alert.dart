@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 void deleteAlert(BuildContext context, {required VoidCallback onConfirm}) {
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
+  
   showDialog(
     context: context,
     builder: (context) => Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(screenWidth * 0.05)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -18,24 +21,28 @@ void deleteAlert(BuildContext context, {required VoidCallback onConfirm}) {
                 Center(
                   child: Text(
                     'Delete',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: Colors.red),
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.05,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: Icon(Icons.close, size: screenWidth * 0.06),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: screenHeight * 0.0125),
 
             Center(
               child: Text(
                 'Are you sure you want to delete this blood details?',
-                style: TextStyle(fontSize: 15,),
+                style: TextStyle(fontSize: screenWidth * 0.0375),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.025),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -45,17 +52,17 @@ void deleteAlert(BuildContext context, {required VoidCallback onConfirm}) {
                     onConfirm();
                   },
                   child: Container(
-                    height: 50,
-                    width: 100,
+                    height: screenHeight * 0.0625,
+                    width: screenWidth * 0.25,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.black, width: 0.5),
+                      borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                      border: Border.all(color: Colors.black, width: screenWidth * 0.00125),
                     ),
                     child: Center(
                       child: Text(
                         'YES',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: screenWidth * 0.03,
                           fontWeight: FontWeight.bold,
                           color: Colors.red
                         ),
@@ -69,17 +76,17 @@ void deleteAlert(BuildContext context, {required VoidCallback onConfirm}) {
                     Navigator.pop(context);
                   },
                   child: Container(
-                    height: 50,
-                    width: 100,
+                    height: screenHeight * 0.0625,
+                    width: screenWidth * 0.25,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color:Colors.black, width: 0.5),
+                      borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                      border: Border.all(color: Colors.black, width: screenWidth * 0.00125),
                     ),
                     child: Center(
                       child: Text(
                         'NO',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: screenWidth * 0.03,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

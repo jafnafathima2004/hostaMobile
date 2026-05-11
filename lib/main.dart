@@ -65,7 +65,9 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
-      home: const Bottomnav(),
+     home: const Bottomnav(),
+     // home: const PrescriptionDetailsScreen(),
+      
     );
   }
 }

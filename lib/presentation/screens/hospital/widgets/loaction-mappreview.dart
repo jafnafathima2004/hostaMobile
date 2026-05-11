@@ -84,6 +84,9 @@ class _LocationMapPreviewState extends State<LocationMapPreview> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     return Stack(
       children: [
         // WebView
@@ -93,15 +96,20 @@ class _LocationMapPreviewState extends State<LocationMapPreview> {
         if (isLoading)
           Container(
             color: Colors.white,
-            child: const Center(
+            child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
+                  CircularProgressIndicator(
+                    strokeWidth: screenWidth * 0.008,
+                  ),
+                  SizedBox(height: screenHeight * 0.02),
                   Text(
                     "Loading map...",
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.04,
+                      color: Colors.grey,
+                    ),
                   ),
                 ],
               ),
@@ -116,19 +124,39 @@ class _LocationMapPreviewState extends State<LocationMapPreview> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Map not available",
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  Icon(
+                    Icons.error_outline,
+                    size: screenWidth * 0.16,
+                    color: Colors.grey,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: screenHeight * 0.02),
+                  Text(
+                    "Map not available",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.04,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.01),
                   ElevatedButton(
                     onPressed: _initializeWebView,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.06,
+                        vertical: screenHeight * 0.0125,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                      ),
                     ),
-                    child: const Text("Retry", style: TextStyle(color: Colors.white)),
+                    child: Text(
+                      "Retry",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: screenWidth * 0.035,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -138,19 +166,19 @@ class _LocationMapPreviewState extends State<LocationMapPreview> {
         // Hospital Info Overlay
         if (!isLoading && !hasError)
           Positioned(
-            bottom: 16,
-            left: 16,
-            right: 16,
+            bottom: screenHeight * 0.02,
+            left: screenWidth * 0.04,
+            right: screenWidth * 0.04,
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(screenWidth * 0.03),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(screenWidth * 0.02),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    blurRadius: screenWidth * 0.01,
+                    offset: Offset(0, screenHeight * 0.0025),
                   ),
                 ],
               ),
@@ -159,17 +187,17 @@ class _LocationMapPreviewState extends State<LocationMapPreview> {
                 children: [
                   Text(
                     widget.hospitalName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: screenWidth * 0.04,
                     ),
                   ),
                   if (widget.address.isNotEmpty)
                     Text(
                       widget.address,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.grey,
-                        fontSize: 14,
+                        fontSize: screenWidth * 0.035,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

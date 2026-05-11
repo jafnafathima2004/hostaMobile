@@ -118,10 +118,10 @@ class _AmbulanceRegisterState extends State<AmbulanceRegister> {
                 child: Container(
                   width: MediaQuery.of(context).size.width * 0.9,
                   height: MediaQuery.of(context).size.height * 0.6,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.03),
                   ),
                   child: Column(
                     children: [
@@ -129,36 +129,39 @@ class _AmbulanceRegisterState extends State<AmbulanceRegister> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(title,
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                              style: TextStyle(
+                                  fontSize: MediaQuery.of(context).size.width * 0.045,
+                                  fontWeight: FontWeight.bold)),
                           IconButton(
-                            icon: const Icon(Icons.close),
+                            icon: Icon(Icons.close, size: MediaQuery.of(context).size.width * 0.06),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
                       ),
                       TextField(
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.search),
+                          prefixIcon: Icon(Icons.search, size: MediaQuery.of(context).size.width * 0.06),
                           hintText: "Search...",
+                          hintStyle: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.035),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.05),
                           ),
+                          contentPadding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.0125),
                         ),
                         onChanged: (val) {
                           setModalState(() => searchQuery = val);
                         },
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: MediaQuery.of(context).size.height * 0.015),
                       Expanded(
                         child: filtered.isEmpty
-                            ? const Center(child: Text("No results"))
+                            ? Center(child: Text("No results", style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.04)))
                             : ListView.builder(
                                 itemCount: filtered.length,
                                 itemBuilder: (_, i) {
                                   final item = filtered[i];
                                   return ListTile(
-                                    title: Text(item['name']),
+                                    title: Text(item['name'], style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.04)),
                                     onTap: () {
                                       onSelected(item);
                                       Navigator.pop(context);
@@ -288,94 +291,163 @@ class _AmbulanceRegisterState extends State<AmbulanceRegister> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: const Color(0xFFECFDF5),
       appBar: AppBar(
-        title: const Text("Register Ambulance",
-            style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
-            centerTitle: true,
+        title: Text(
+          "Register Ambulance",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: screenWidth * 0.05,
+          ),
+        ),
+        centerTitle: true,
         backgroundColor: Colors.green,
-        leading: IconButton(onPressed: (){
-          Navigator.pop(context);
-        }, icon: Icon(Icons.arrow_back_ios_new, color: Colors.white)),
+        leading: IconButton(
+          onPressed: (){
+            Navigator.pop(context);
+          },
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: screenWidth * 0.055,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(
           children: [
             TextField(
               controller: _phoneController,
               readOnly: true,
-              decoration:  InputDecoration(labelText: "Phone",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10)
-              )
+              decoration: InputDecoration(
+                labelText: "Phone",
+                labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025)
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.03,
+                  vertical: screenHeight * 0.015,
+                ),
               ),
-              
             ),
-            SizedBox(height: 5,),
+            SizedBox(height: screenHeight * 0.006),
             TextField(
               controller: _driverNameController,
-              decoration:  InputDecoration(labelText: "Driver Name",
-               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10)
-              )
+              decoration: InputDecoration(
+                labelText: "Driver Name",
+                labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025)
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.03,
+                  vertical: screenHeight * 0.015,
+                ),
               ),
-              
             ),
-            SizedBox(height: 5,),
+            SizedBox(height: screenHeight * 0.006),
             TextField(
               controller: _vehicleNumberController,
-              decoration:  InputDecoration(labelText: "Vehicle Number",
-               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10)
-              )
+              decoration: InputDecoration(
+                labelText: "Vehicle Number",
+                labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025)
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.03,
+                  vertical: screenHeight * 0.015,
+                ),
               ),
             ),
-            SizedBox(height: 5,),
+            SizedBox(height: screenHeight * 0.006),
             DropdownButtonFormField<String>(
               value: vehicleType,
               items: vehicleTypes
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  .map((e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(e, style: TextStyle(fontSize: screenWidth * 0.04)),
+                  ))
                   .toList(),
               onChanged: (val) => setState(() => vehicleType = val),
-              decoration:  InputDecoration(labelText: "Vehicle Type",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10)
-              )
+              decoration: InputDecoration(
+                labelText: "Vehicle Type",
+                labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025)
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.03,
+                  vertical: screenHeight * 0.015,
+                ),
               ),
-              
             ),
             SwitchListTile(
-              title: const Text("Available"),
+              title: Text(
+                "Available",
+                style: TextStyle(fontSize: screenWidth * 0.04),
+              ),
               value: isAvailable,
               onChanged: (val) => setState(() => isAvailable = val),
+              contentPadding: EdgeInsets.zero,
             ),
-            SizedBox(height: 5,),
+            SizedBox(height: screenHeight * 0.006),
             TextField(
               controller: _placeController,
-              decoration:  InputDecoration(labelText: "Place",
-               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10)
-              )
+              decoration: InputDecoration(
+                labelText: "Place",
+                labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025)
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.03,
+                  vertical: screenHeight * 0.015,
+                ),
               ),
             ),
-            SizedBox(height: 5,),
+            SizedBox(height: screenHeight * 0.006),
             TextField(
               controller: _pincodeController,
-              decoration:  InputDecoration(labelText: "Pincode",
-               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10)
-              )
+              decoration: InputDecoration(
+                labelText: "Pincode",
+                labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025)
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.03,
+                  vertical: screenHeight * 0.015,
+                ),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.025),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green
+                backgroundColor: Colors.green,
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.08,
+                  vertical: screenHeight * 0.015,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                ),
               ),
               onPressed: _submit,
-              child: const Text("Register Ambulance",style: TextStyle(color: Colors.white),),
+              child: Text(
+                "Register Ambulance",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.04,
+                ),
+              ),
             )
           ],
         ),

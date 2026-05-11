@@ -95,6 +95,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
     _checkLocationStatus();
     _getLocationAndFetchData();
     _startAutoRefresh();
+
   }
 
   void dispose() {
@@ -368,6 +369,7 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     // Store the notifier reference here
     _homeNotifier = ref.read(homeProvider.notifier);
     _homeNotifier.init();
+
   }
 
   @override

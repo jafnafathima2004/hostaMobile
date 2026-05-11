@@ -161,6 +161,8 @@ void initState() {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final isLoading = ref.watch(isLoadingProvider);
     final filteredList = ref.watch(filteredAmbulanceListProvider);
     final ambulanceList = ref.watch(ambulanceListProvider);
@@ -174,30 +176,50 @@ void initState() {
     return Scaffold(
       backgroundColor: const Color(0xFFECFDF5),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Ambulances",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: screenWidth * 0.05,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.green,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: screenWidth * 0.055,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(
+              Icons.refresh,
+              color: Colors.white,
+              size: screenWidth * 0.06,
+            ),
             onPressed: _refreshData,
             tooltip: 'Refresh',
           ),
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.green))
+          ? Center(
+              child: CircularProgressIndicator(
+                color: Colors.green,
+                strokeWidth: screenWidth * 0.008,
+              ),
+            )
           : Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.04,
+                    vertical: screenHeight * 0.0125,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -207,27 +229,38 @@ void initState() {
                           },
                           decoration: InputDecoration(
                             hintText: "Search ambulance service...",
-                            prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                            hintStyle: TextStyle(fontSize: screenWidth * 0.035),
+                            prefixIcon: Icon(Icons.search, color: Colors.grey, size: screenWidth * 0.06),
                             filled: true,
                             fillColor: Colors.grey[100],
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(screenWidth * 0.03),
                               borderSide: BorderSide.none,
                             ),
+                            contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.0125),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: screenWidth * 0.02),
                       if(ambulanceId == null)...{
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.04,
+                              vertical: screenHeight * 0.015,
+                            ),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                                borderRadius: BorderRadius.circular(screenWidth * 0.025)),
                           ),
                           onPressed: _handleAmbulanceRegister,
-                          child: const Text("Register", style: TextStyle(color: Colors.white)),
+                          child: Text(
+                            "Register",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.035,
+                            ),
+                          ),
                         ),
                       }else...{
                         const SizedBox.shrink()
@@ -235,7 +268,7 @@ void initState() {
                     ],
                   ),
                 ),
-                _buildLocationAndClearButton(context),
+                _buildLocationAndClearButton(context, screenWidth, screenHeight),
                 Expanded(
                   child: filteredList.isEmpty
                       ? Center(
@@ -244,35 +277,47 @@ void initState() {
                             children: [
                               Icon(
                                 ambulanceList.isEmpty ? Icons.error_outline : Icons.search_off,
-                                size: 60,
+                                size: screenWidth * 0.15,
                                 color: Colors.grey,
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: screenHeight * 0.02),
                               Text(
                                 ambulanceList.isEmpty 
                                   ? "No ambulances available" 
                                   : "No ambulances found",
-                                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: screenWidth * 0.04,
+                                  color: Colors.grey,
+                                ),
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: screenHeight * 0.01),
                               Text(
                                 ambulanceList.isEmpty 
                                   ? "Check your connection or try again later"
                                   : "Try adjusting your filters",
-                                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: screenWidth * 0.035,
+                                  color: Colors.grey,
+                                ),
                                 textAlign: TextAlign.center,
                               ),
                               if (ambulanceList.isEmpty) ...[
-                                const SizedBox(height: 20),
+                                SizedBox(height: screenHeight * 0.025),
                                 ElevatedButton(
                                   onPressed: _refreshData,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.green,
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: screenWidth * 0.06,
+                                      vertical: screenHeight * 0.015,
+                                    ),
                                   ),
-                                  child: const Text(
+                                  child: Text(
                                     "Try Again",
-                                    style: TextStyle(color: Colors.white),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: screenWidth * 0.035,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -281,18 +326,18 @@ void initState() {
                         )
                       : ListView.builder(
                           itemCount: filteredList.length,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
                           itemBuilder: (context, index) {
                             final amb = filteredList[index];
                             final address = amb['address'] ?? {};
 
                             return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              margin: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                              elevation: 3,
+                                  borderRadius: BorderRadius.circular(screenWidth * 0.03)),
+                              elevation: screenWidth * 0.0075,
                               child: Padding(
-                                padding: const EdgeInsets.all(12.0),
+                                padding: EdgeInsets.all(screenWidth * 0.03),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -301,46 +346,46 @@ void initState() {
                                         color: Colors.green.shade50,
                                         shape: BoxShape.circle,
                                       ),
-                                      padding: const EdgeInsets.all(12),
-                                      child: const Icon(
+                                      padding: EdgeInsets.all(screenWidth * 0.03),
+                                      child: Icon(
                                         Icons.local_hospital,
                                         color: Colors.green,
-                                        size: 30,
+                                        size: screenWidth * 0.075,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
+                                    SizedBox(width: screenWidth * 0.03),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             amb["serviceName"] ?? "Unknown",
-                                            style: const TextStyle(
-                                              fontSize: 16,
+                                            style: TextStyle(
+                                              fontSize: screenWidth * 0.04,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                          const SizedBox(height: 4),
+                                          SizedBox(height: screenHeight * 0.005),
                                           Text(
                                             "${address["place"] ?? ""}",
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                                 color: Colors.grey,
-                                                fontSize: 13),
+                                                fontSize: screenWidth * 0.0325),
                                           ),
-                                          const SizedBox(height: 2),
+                                          SizedBox(height: screenHeight * 0.0025),
                                           Text(
                                             "${address["district"] ?? ""}, ${address["state"] ?? ""}, ${address["country"] ?? ""}",
-                                            style: const TextStyle(
-                                                fontSize: 12,
+                                            style: TextStyle(
+                                                fontSize: screenWidth * 0.03,
                                                 color: Colors.black45),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
-                                          const SizedBox(height: 4),
+                                          SizedBox(height: screenHeight * 0.005),
                                           Text(
                                             "${amb["vehicleType"] ?? "N/A"}",
-                                            style: const TextStyle(
-                                                fontSize: 13,
+                                            style: TextStyle(
+                                                fontSize: screenWidth * 0.0325,
                                                 color: Colors.black87),
                                           ),
                                         ],
@@ -352,10 +397,10 @@ void initState() {
                                           onPressed: () {
                                             _callNumber(amb["phone"] ?? "");
                                           },
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.call,
                                             color: Colors.green,
-                                            size: 28,
+                                            size: screenWidth * 0.07,
                                           ),
                                         ),
                                         if (amb["latitude"] != null && amb["longitude"] != null)
@@ -371,10 +416,10 @@ void initState() {
                                                   0;
                                               _openMap(lat, lon);
                                             },
-                                            icon: const Icon(
+                                            icon: Icon(
                                               Icons.location_on,
                                               color: Colors.red,
-                                              size: 28,
+                                              size: screenWidth * 0.07,
                                             ),
                                           ),
                                       ],
@@ -391,24 +436,27 @@ void initState() {
     );
   }
 
-  Widget _buildLocationAndClearButton(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+  Widget _buildLocationAndClearButton(BuildContext context, double screenWidth, double screenHeight) => Padding(
+        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenHeight * 0.005),
         child: Row(
           children: [
             Expanded(
               child: InkWell(
-                onTap: () => _openLocationFilter(context),
+                onTap: () => _openLocationFilter(context, screenWidth, screenHeight),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03, vertical: screenHeight * 0.0125),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade300, width: screenWidth * 0.0025),
+                    borderRadius: BorderRadius.circular(screenWidth * 0.025),
                   ),
                   child: Text(
                     ref.watch(selectedCountryProvider).isEmpty
                         ? "Select Location"
                         : "${ref.watch(selectedCountryProvider)} > ${ref.watch(selectedStateProvider)} > ${ref.watch(selectedDistrictProvider)} > ${ref.watch(selectedPlaceProvider)}",
-                    style: const TextStyle(fontSize: 14, color: Colors.black54),
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.035,
+                      color: Colors.black54,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -423,14 +471,20 @@ void initState() {
                 ref.read(selectedPlaceProvider.notifier).state = '';
                 ref.read(searchQueryProvider.notifier).state = '';
               },
-              icon: const Icon(Icons.clear, color: Colors.red),
-              label: const Text("Clear", style: TextStyle(color: Colors.red)),
+              icon: Icon(Icons.clear, color: Colors.red, size: screenWidth * 0.05),
+              label: Text(
+                "Clear",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: screenWidth * 0.035,
+                ),
+              ),
             ),
           ],
         ),
       );
 
-  void _openLocationFilter(BuildContext context) {
+  void _openLocationFilter(BuildContext context, double screenWidth, double screenHeight) {
     String tempCountry = ref.read(selectedCountryProvider);
     String tempState = ref.read(selectedStateProvider);
     String tempDistrict = ref.read(selectedDistrictProvider);
@@ -439,8 +493,8 @@ void initState() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(screenWidth * 0.05)),
       ),
       builder: (context) {
         return StatefulBuilder(builder: (context, setModalState) {
@@ -450,37 +504,50 @@ void initState() {
           final filteredPlaces = getFilteredPlaces(tempCountry, tempState, tempDistrict);
 
           return Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(screenWidth * 0.04),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Center(
+                  Center(
                     child: Text(
                       "Select Location",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.045,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Divider(),
+                  SizedBox(height: screenHeight * 0.02),
+                  Divider(thickness: screenWidth * 0.0025),
                   DropdownButtonFormField<String>(
                     value: tempCountry.isEmpty ? null : tempCountry,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: "Country *",
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                      ),
                       filled: true,
                       fillColor: Colors.white,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.03,
+                        vertical: screenHeight * 0.0125,
+                      ),
                     ),
                     items: [
-                      const DropdownMenuItem(
+                      DropdownMenuItem(
                         value: '',
-                        child: Text("Select Country", style: TextStyle(color: Colors.grey)),
+                        child: Text(
+                          "Select Country",
+                          style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.035),
+                        ),
                       ),
                       ...countries.map((country) {
                         return DropdownMenuItem(
                           value: country,
-                          child: Text(country),
+                          child: Text(country, style: TextStyle(fontSize: screenWidth * 0.035)),
                         );
                       }).toList(),
                     ],
@@ -493,25 +560,35 @@ void initState() {
                       });
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: screenHeight * 0.02),
                   if (tempCountry.isNotEmpty) ...[
                     DropdownButtonFormField<String>(
                       value: tempState.isEmpty ? null : tempState,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: "State *",
-                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.03,
+                          vertical: screenHeight * 0.0125,
+                        ),
                       ),
                       items: [
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: '',
-                          child: Text("Select State", style: TextStyle(color: Colors.grey)),
+                          child: Text(
+                            "Select State",
+                            style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.035),
+                          ),
                         ),
                         ...filteredStates.map((state) {
                           return DropdownMenuItem(
                             value: state,
-                            child: Text(state),
+                            child: Text(state, style: TextStyle(fontSize: screenWidth * 0.035)),
                           );
                         }).toList(),
                       ],
@@ -523,26 +600,36 @@ void initState() {
                         });
                       },
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: screenHeight * 0.02),
                   ],
                   if (tempCountry.isNotEmpty && tempState.isNotEmpty) ...[
                     DropdownButtonFormField<String>(
                       value: tempDistrict.isEmpty ? null : tempDistrict,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: "District *",
-                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.03,
+                          vertical: screenHeight * 0.0125,
+                        ),
                       ),
                       items: [
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: '',
-                          child: Text("Select District", style: TextStyle(color: Colors.grey)),
+                          child: Text(
+                            "Select District",
+                            style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.035),
+                          ),
                         ),
                         ...filteredDistricts.map((district) {
                           return DropdownMenuItem(
                             value: district,
-                            child: Text(district),
+                            child: Text(district, style: TextStyle(fontSize: screenWidth * 0.035)),
                           );
                         }).toList(),
                       ],
@@ -553,26 +640,36 @@ void initState() {
                         });
                       },
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: screenHeight * 0.02),
                   ],
                   if (tempCountry.isNotEmpty && tempState.isNotEmpty && tempDistrict.isNotEmpty) ...[
                     DropdownButtonFormField<String>(
                       value: tempPlace.isEmpty ? null : tempPlace,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: "Place",
-                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(fontSize: screenWidth * 0.035),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.03,
+                          vertical: screenHeight * 0.0125,
+                        ),
                       ),
                       items: [
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: '',
-                          child: Text("Select Place", style: TextStyle(color: Colors.grey)),
+                          child: Text(
+                            "Select Place",
+                            style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.035),
+                          ),
                         ),
                         ...filteredPlaces.map((place) {
                           return DropdownMenuItem(
                             value: place,
-                            child: Text(place),
+                            child: Text(place, style: TextStyle(fontSize: screenWidth * 0.035)),
                           );
                         }).toList(),
                       ],
@@ -582,9 +679,9 @@ void initState() {
                         });
                       },
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: screenHeight * 0.02),
                   ],
-                  const SizedBox(height: 24),
+                  SizedBox(height: screenHeight * 0.03),
                   ElevatedButton(
                     onPressed: () {
                       ref.read(selectedCountryProvider.notifier).state = tempCountry;
@@ -595,17 +692,20 @@ void initState() {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(screenWidth * 0.03),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       "Apply Filter",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: screenWidth * 0.04,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: screenHeight * 0.01),
                 ],
               ),
             ),

@@ -15,7 +15,8 @@ class _HospitalTypesState extends State<HospitalTypes> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     final filteredData = hospitalTypesData.entries
         .where((e) => e.key.toLowerCase().contains(searchQuery.toLowerCase()))
@@ -25,17 +26,21 @@ class _HospitalTypesState extends State<HospitalTypes> {
       backgroundColor: const Color(0xFFECFDF5),
       appBar: AppBar(
         backgroundColor: Colors.green,
-        title: const Text(
+        title: Text(
           "Hospital Categories",
           style: TextStyle(
             fontWeight: FontWeight.bold, 
             color: Colors.white,
-            fontSize: 20,
+            fontSize: screenWidth * 0.05,
           ),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: screenWidth * 0.055,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -45,18 +50,27 @@ class _HospitalTypesState extends State<HospitalTypes> {
           children: [
             // ===== Search Bar =====
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04,
+                vertical: screenHeight * 0.015,
+              ),
               child: TextField(
                 onChanged: (val) => setState(() => searchQuery = val),
                 decoration: InputDecoration(
                   hintText: 'Search categories...',
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  hintStyle: TextStyle(fontSize: screenWidth * 0.035),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.grey,
+                    size: screenWidth * 0.06,
+                  ),
                   filled: true,
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(screenWidth * 0.03),
                     borderSide: BorderSide.none,
                   ),
+                  contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.0125),
                 ),
               ),
             ),
@@ -64,7 +78,7 @@ class _HospitalTypesState extends State<HospitalTypes> {
             // ===== Grid of Hospital Types =====
             Expanded(
               child: GridView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(screenWidth * 0.04),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
@@ -86,7 +100,7 @@ class _HospitalTypesState extends State<HospitalTypes> {
                         ),
                       );
                     },
-                    child: _buildCard(name, imageUrl, width),
+                    child: _buildCard(name, imageUrl, screenWidth, screenHeight),
                   );
                 },
               ),
@@ -97,11 +111,11 @@ class _HospitalTypesState extends State<HospitalTypes> {
     );
   }
 
-  Widget _buildCard(String name, String imageUrl, double width) {
+  Widget _buildCard(String name, String imageUrl, double screenWidth, double screenHeight) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(screenWidth * 0.035),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 3)],
       ),
       child: Column(
@@ -109,13 +123,16 @@ class _HospitalTypesState extends State<HospitalTypes> {
         children: [
           CircleAvatar(
             backgroundImage: NetworkImage(imageUrl),
-            radius: width * 0.12,
+            radius: screenWidth * 0.12,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: screenHeight * 0.01),
           Text(
             name,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: screenWidth * 0.035,
+            ),
           ),
         ],
       ),

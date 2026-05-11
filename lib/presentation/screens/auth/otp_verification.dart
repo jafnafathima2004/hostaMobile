@@ -418,7 +418,18 @@ class _OtpVerificationState extends State<OtpVerification> {
 
   Future<void> _verifyOtp() async {
     String otp = otpController.text;
+    String phone = widget.phone;
     
+     // ✅ Clean phone number again if needed
+  String cleanPhone = phone
+      .replaceAll('+', '')
+      .replaceAll(' ', '')
+      .replaceAll('-', '');
+       
+  if (cleanPhone.startsWith('91') && cleanPhone.length == 12) {
+    cleanPhone = cleanPhone.substring(2);
+  }
+  
     if (otp.length != 6) {
       setState(() {
         otpError = "Please enter a valid 6-digit OTP";
@@ -435,7 +446,8 @@ class _OtpVerificationState extends State<OtpVerification> {
       String? token = await FirebaseMsg().token;
 
       final response = await widget.apiService.otpUser({
-        "phone": widget.phone,
+       //"phone": widget.phone, 
+        "phone": cleanPhone,
         "otp": otp,
         "FcmToken": token,
       });
@@ -485,7 +497,7 @@ class _OtpVerificationState extends State<OtpVerification> {
       });
     }
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     _startResendTimer();
