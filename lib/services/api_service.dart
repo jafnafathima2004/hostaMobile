@@ -5,9 +5,7 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 
 class ApiService {
-  final Dio _dio = Dio(BaseOptions(baseUrl: 
-  'http://13.60.233.228:3000/api'
-  ));
+final Dio _dio = Dio(BaseOptions(baseUrl: "https://zorrowtek.in"));
 // http://10.0.2.2:3000
 // https://www.zorrowtek.in
 
@@ -123,8 +121,8 @@ Future<Response> getAllCarousel({
   // LOGIN
   Future<Response> loginUser(Map<String, dynamic> data) async {
     return await _dio.post(
-     // '/api/users/login/phone'
-"/users/login/phone"
+      '/api/users/login/phone'
+
       , data: data);
   }
 
@@ -146,30 +144,30 @@ Future<Response> getAllCarousel({
 // }
   Future<Response> otpUser(Map<String, dynamic> data) async {
     return await _dio.post(
-      //'/api/users/otp'
-      "/users/otp"
+      '/api/users/otp'
+   
       , data: data);
   }
 
   // SIGNUP
   Future<Response> signupUser(Map<String, dynamic> data) async {
     return await _dio.post(
-      //'/api/users/registeration'
-      "/users"
+      '/api/users'
+
       , data: data);
   }
 
     Future<Response> getAUser(String id) async {
     return await _dio.get(
-      //'/api/users/$id'
-      "/users/$id"
+      '/api/users/$id'
+  
       );
   }
 
     Future<Response> deleteAUser(String id) async {
     return await _dio.delete(
-      //'/api/users/$id'
-      "/users/$id"
+      '/api/users/$id'
+      
       );
   }
 
