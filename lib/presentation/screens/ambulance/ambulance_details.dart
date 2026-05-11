@@ -154,7 +154,7 @@ class AmbulanceDetailsPage extends ConsumerWidget {
           ),
         ],
       ),
-      child: Column(
+      child: Column( 
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(

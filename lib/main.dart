@@ -6,10 +6,15 @@ import 'package:hosta/firebase_msg.dart';
 import 'package:hosta/presentation/widgets/bottomnav.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+
 void main() async {
-   WidgetsFlutterBinding.ensureInitialized(); 
-await Alarm.init();
-  
+   WidgetsFlutterBinding.ensureInitialized(); // ✅ required
+  //await AlarmService.init();  
+  await Alarm.init();
+ // runApp(MyApp());               // ✅ your line
+  //runApp(const ReminderScreen());  
+  // WidgetsFlutterBinding.ensureInitialized();
+  //   await AlarmService.init();
   await Firebase.initializeApp();
 
   FirebaseMessaging messaging = FirebaseMessaging.instance;
@@ -60,7 +65,9 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
-      home: const Bottomnav(),
+     home: const Bottomnav(),
+     // home: const PrescriptionDetailsScreen(),
+      
     );
   }
 }

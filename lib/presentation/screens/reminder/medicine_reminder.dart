@@ -1544,30 +1544,21 @@ class _ReminderScreenState extends ConsumerState<ReminderScreen> {
     final fontSizeTitle = screenWidth * 0.045;
     final fontSizeBody = screenWidth * 0.04;
     final fontSizeSmall = screenWidth * 0.035;
-    
-    return Scaffold(
+
+      return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
+        title: const Text('Registering medications'),
         backgroundColor: Colors.green,
         elevation: 0,
+        foregroundColor: Colors.white,
+        // ✅ FIX: Instant back — no lag, no canPop check needed
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-            size: screenWidth * 0.05,
-          ),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _goBack,
         ),
-        title: Text(
-          "Registering medications",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: screenWidth * 0.06,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        centerTitle: true,
       ),
+      
       body: Padding(
         padding: EdgeInsets.all(horizontalPadding),
         child: SingleChildScrollView(
@@ -1642,7 +1633,7 @@ class _ReminderScreenState extends ConsumerState<ReminderScreen> {
                   padding: EdgeInsets.symmetric(
                     horizontal: screenWidth * 0.04,
                     vertical: screenHeight * 0.012,
-                  ),
+                  ), 
                 ),
                 child: Text(
                   '+ Add Time',

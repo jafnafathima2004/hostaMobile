@@ -274,7 +274,7 @@ class _DoctorsState extends State<Doctors> {
     
     return GestureDetector(
       onTap: () =>{
-        Navigator.push(context, MaterialPageRoute(builder: (context)=>DoctorDetailScreen()))
+        Navigator.push(context, MaterialPageRoute(builder: (context)=>DoctorDetailScreen(doctor: doctor,)))
       },
       child: Container(
         decoration: BoxDecoration(
@@ -1015,49 +1015,87 @@ class _BookingFormState extends State<BookingForm> {
   // Add loading state
   bool _isSubmitting = false;
 
-void _openCalendar() {
-  showModalBottomSheet(
-    context: context,
-    builder: (_) {
-      return TableCalendar(
-        firstDay: DateTime.now(),
-        lastDay: DateTime.now().add(Duration(days: 365)),
-        focusedDay: DateTime.now(),
+// void _openCalendar() {
+//   showModalBottomSheet(
+//     context: context,
+//     builder: (_) {
+//       return TableCalendar(
+//         firstDay: DateTime.now(),
+//         lastDay: DateTime.now().add(Duration(days: 365)),
+//         focusedDay: DateTime.now(),
 
-        onDaySelected: (selectedDay, focusedDay) {
-          if (_isDateEnabled(selectedDay)) {
-            setState(() {
-              appointmentDate = selectedDay;
-            });
-            Navigator.pop(context);
-          }
-        },
+//         onDaySelected: (selectedDay, focusedDay) {
+//           if (_isDateEnabled(selectedDay)) {
+//             setState(() {
+//               appointmentDate = selectedDay;
+//             });
+//             Navigator.pop(context);
+//           }
+//         },
 
-        // 👇 THIS PART = MAGIC (UI CONTROL)
-        calendarBuilders: CalendarBuilders(
-          defaultBuilder: (context, day, focusedDay) {
+//         // 👇 THIS PART = MAGIC (UI CONTROL)
+//         calendarBuilders: CalendarBuilders(
+//           defaultBuilder: (context, day, focusedDay) {
             
-            // if doctor available
-            if (_isDateEnabled(day)) {
-              return Container(
-                margin: EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.green, width: 2),
-                ),
-                child: Center(
-                  child: Text('${day.day}',
-                      style: TextStyle(color: Colors.green)),
-                ),
-              );
-            }
+//             // if doctor available
+//             if (_isDateEnabled(day)) {
+//               return Container(
+//                 margin: EdgeInsets.all(6),
+//                 decoration: BoxDecoration(
+//                   shape: BoxShape.circle,
+//                   border: Border.all(color: Colors.green, width: 2),
+//                 ),
+//                 child: Center(
+//                   child: Text('${day.day}',
+//                       style: TextStyle(color: Colors.green)),
+//                 ),
+//               );
+//             }
 
-            return null;
-          },
+//             return null;
+//           },
+//         ),
+//       );
+//     },
+//   );
+// }
+
+
+void _openCalendar() async {
+  final now = DateTime.now();
+  
+  // For appointment date picker with custom theme
+  final picked = await showDatePicker(
+    context: context,
+    initialDate: appointmentDate ?? now,
+    firstDate: now,
+    lastDate: now.add(Duration(days: 365)),
+    selectableDayPredicate: _isDateEnabled,
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: Colors.green,           // Header background
+            onPrimary: Colors.white,         // Header text color
+            onSurface: Colors.grey,     // Body text color
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.green, // Button text color
+            ),
+          ),
+          dialogBackgroundColor: Colors.white,
         ),
+        child: child!,
       );
     },
   );
+  
+  if (picked != null) {
+    setState(() {
+      appointmentDate = picked;
+    });
+  }
 }
 
   @override
@@ -1435,99 +1473,99 @@ void _openCalendar() {
     );
   }
 
-  // Widget _buildTimingsPreview() {
-  //   final availableDays = widget.doctor.consulting.where((day) => day.sessions.isNotEmpty).toList();
+  Widget _buildTimingsPreview() {
+    final availableDays = widget.doctor.consulting.where((day) => day.sessions.isNotEmpty).toList();
     
-    // return Container(
-    //   padding: EdgeInsets.all(16),
-    //   decoration: BoxDecoration(
-    //     color: Colors.grey[50],
-    //     borderRadius: BorderRadius.circular(15),
-    //     border: Border.all(color: Colors.grey[200]!),
-    //   ),
-      // child: Column(
-      //   crossAxisAlignment: CrossAxisAlignment.start,
-      //   children: [
-      //     Row(
-      //       children: [
-      //         Icon(Icons.schedule_rounded, color: Colors.green, size: 20),
-      //         SizedBox(width: 8),
-      //         Text(
-      //           'Available Days & Timings',
-      //           style: TextStyle(
-      //             fontSize: 16,
-      //             fontWeight: FontWeight.bold,
-      //             color: Colors.grey[800],
-      //           ),
-      //         ),
-      //       ],
-      //     ),
-      //     SizedBox(height: 12),
-      //     if (availableDays.isNotEmpty)
-      //       Column(
-      //         children: availableDays.map((day) {
-      //           return Container(
-      //             margin: EdgeInsets.only(bottom: 8),
-      //             padding: EdgeInsets.all(12),
-      //             decoration: BoxDecoration(
-      //               color: Colors.white,
-      //               borderRadius: BorderRadius.circular(10),
-      //               border: Border.all(color: Colors.grey[200]!),
-      //             ),
-      //             child: Row(
-      //               children: [
-      //                 Container(
-      //                   width: 40,
-      //                   height: 40,
-      //                   decoration: BoxDecoration(
-      //                     color: Colors.green[100],
-      //                     shape: BoxShape.circle,
-      //                   ),
-      //                   child: Icon(Icons.calendar_today, color: Colors.green, size: 18),
-      //                 ),
-      //                 SizedBox(width: 12),
-      //                 Expanded(
-      //                   child: Column(
-      //                     crossAxisAlignment: CrossAxisAlignment.start,
-      //                     children: [
-      //                       Text(
-      //                         day.day,
-      //                         style: TextStyle(
-      //                           fontWeight: FontWeight.w500,
-      //                           color: Colors.grey[800],
-      //                         ),
-      //                       ),
-      //                       if (day.sessions.isNotEmpty)
-      //                         ...day.sessions.map((session) {
-      //                           return Text(
-      //                             '${session.startTime} - ${session.endTime}',
-      //                             style: TextStyle(
-      //                               fontSize: 12,
-      //                               color: Colors.green[600],
-      //                               fontWeight: FontWeight.w500,
-      //                             ),
-      //                           );
-      //                         }).toList(),
-      //                     ],
-      //                   ),
-      //                 ),
-      //               ],
-      //             ),
-      //           );
-      //         }).toList(),
-      //       )
-      //     else
-      //       Text(
-      //         'No available timings',
-      //         style: TextStyle(
-      //           color: Colors.grey[500],
-      //           fontStyle: FontStyle.italic,
-      //         ),
-      //       ),
-      //   ],
-      // ),
-  //   );
-  // }
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.schedule_rounded, color: Colors.green, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Available Days & Timings',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          if (availableDays.isNotEmpty)
+            Column(
+              children: availableDays.map((day) {
+                return Container(
+                  margin: EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.green[100],
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.calendar_today, color: Colors.green, size: 18),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              day.day,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                            if (day.sessions.isNotEmpty)
+                              ...day.sessions.map((session) {
+                                return Text(
+                                  '${session.startTime} - ${session.endTime}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.green[600],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                );
+                              }).toList(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            )
+          else
+            Text(
+              'No available timings',
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildInputField(String label, TextEditingController controller, IconData icon, {
     TextInputType keyboardType = TextInputType.text,
@@ -1623,897 +1661,6 @@ void _openCalendar() {
     );
   }
 }
-
-
-
-
-
-
-// lib/presentation/screens/doctor/doctors.dart
-// import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:hosta/common/top_snackbar.dart';
-// import 'package:hosta/data/models/doctor_model.dart';
-// import 'package:hosta/presentation/screens/auth/signin.dart';
-// import 'package:hosta/presentation/screens/doctor/doctor_detail.dart';
-// import 'package:hosta/providers/doctor_provider.dart';
-
-// class Doctors extends ConsumerStatefulWidget {
-//   final String hospitalId;
-//   final String specialty;
-  
-//   const Doctors({super.key, required this.hospitalId, required this.specialty});
-
-//   @override
-//   ConsumerState<Doctors> createState() => _DoctorsState();
-// }
-
-// class _DoctorsState extends ConsumerState<Doctors> {
-//   @override
-//   void initState() {
-//     super.initState();
-//     // Fetch doctors when screen loads
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       ref.read(doctorsProvider((hospitalId: widget.hospitalId, specialty: widget.specialty)).notifier).fetchDoctors();
-//     });
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final doctorsState = ref.watch(doctorsProvider((hospitalId: widget.hospitalId, specialty: widget.specialty)));
-    
-//     return Scaffold(
-//       backgroundColor: const Color(0xFFECFDF5),
-//       appBar: AppBar(
-//         backgroundColor: Colors.green,
-//         title: Text(
-//           "Doctors",
-//           style: TextStyle(
-//             fontWeight: FontWeight.bold,
-//             color: Colors.white,
-//             fontSize: 20,
-//           ),
-//         ),
-//         centerTitle: true,
-//         leading: IconButton(
-//           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-//           onPressed: () => Navigator.pop(context),
-//         ),
-//         elevation: 0,
-//       ),
-//       body: SafeArea(
-//         bottom: false,
-//         child: Column(
-//           children: [
-//             _buildSearchBar(),
-//             Expanded(child: _buildContent(doctorsState)),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildSearchBar() {
-//     return Container(
-//       color: Colors.white,
-//       padding: EdgeInsets.all(20),
-//       child: Container(
-//         height: 50,
-//         decoration: BoxDecoration(
-//           color: Colors.grey[50],
-//           borderRadius: BorderRadius.circular(15),
-//           border: Border.all(color: Colors.grey[200]!),
-//         ),
-//         child: Row(
-//           children: [
-//             SizedBox(width: 16),
-//             Icon(Icons.search_rounded, color: Colors.grey[500], size: 20),
-//             SizedBox(width: 12),
-//             Expanded(
-//               child: TextField(
-//                 onChanged: (value) {
-//                   ref.read(doctorsProvider((hospitalId: widget.hospitalId, specialty: widget.specialty)).notifier).updateSearchQuery(value);
-//                 },
-//                 decoration: InputDecoration(
-//                   hintText: 'Search doctors, specialties...',
-//                   hintStyle: TextStyle(color: Colors.grey[500]),
-//                   border: InputBorder.none,
-//                   contentPadding: EdgeInsets.zero,
-//                 ),
-//                 style: TextStyle(fontSize: 14),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildContent(DoctorsState doctorsState) {
-//     if (doctorsState.isLoading) {
-//       return Center(child: CircularProgressIndicator(color: Colors.green));
-//     }
-
-//     if (doctorsState.errorMessage != null) {
-//       return Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             Icon(Icons.error_outline, size: 60, color: Colors.grey[400]),
-//             SizedBox(height: 16),
-//             Text(
-//               doctorsState.errorMessage!,
-//               style: TextStyle(color: Colors.grey[600]),
-//               textAlign: TextAlign.center,
-//             ),
-//             SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: () {
-//                 ref.read(doctorsProvider((hospitalId: widget.hospitalId, specialty: widget.specialty)).notifier).fetchDoctors();
-//               },
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: Colors.green,
-//                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-//                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-//               ),
-//               child: Text('Try Again', style: TextStyle(color: Colors.white)),
-//             ),
-//           ],
-//         ),
-//       );
-//     }
-
-//     return Column(
-//       children: [
-//         Container(
-//           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-//           color: Colors.white,
-//           child: Row(
-//             children: [
-//               Text(
-//                 '${doctorsState.filteredDoctors.length} Doctors',
-//                 style: TextStyle(
-//                   fontSize: 14,
-//                   color: Colors.grey[600],
-//                   fontWeight: FontWeight.w500,
-//                 ),
-//               ),
-//               Spacer(),
-//             ],
-//           ),
-//         ),
-//         SizedBox(height: 8),
-//         Expanded(
-//           child: doctorsState.filteredDoctors.isEmpty
-//               ? _buildEmptyState()
-//               : _buildDoctorsGrid(doctorsState.filteredDoctors),
-//         ),
-//       ],
-//     );
-//   }
-
-//   Widget _buildEmptyState() {
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           Icon(Icons.search_off_rounded, size: 80, color: Colors.grey[300]),
-//           SizedBox(height: 20),
-//           Text(
-//             'No doctors found',
-//             style: TextStyle(
-//               fontSize: 18,
-//               color: Colors.grey[600],
-//               fontWeight: FontWeight.w500,
-//             ),
-//           ),
-//           SizedBox(height: 8),
-//           Text(
-//             'Try adjusting your search',
-//             style: TextStyle(
-//               fontSize: 14,
-//               color: Colors.grey[500],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildDoctorsGrid(List<Doctor> doctors) {
-//     return Padding(
-//       padding: EdgeInsets.symmetric(horizontal: 16),
-//       child: GridView.builder(
-//         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//           crossAxisCount: 2,
-//           mainAxisSpacing: 16,
-//           crossAxisSpacing: 16,
-//           childAspectRatio: 0.82,
-//         ),
-//         itemCount: doctors.length,
-//         itemBuilder: (context, index) {
-//           final doctor = doctors[index];
-//           return _buildDoctorCard(doctor);
-//         },
-//       ),
-//     );
-//   }
-
-//   Widget _buildDoctorCard(Doctor doctor) {
-//     String firstLetter = 'D';
-//     if (doctor.name.trim().isNotEmpty) {
-//       firstLetter = doctor.name.trim()[0].toUpperCase();
-//     }
-    
-//     return GestureDetector(
-//       onTap: () {
-//         Navigator.push(context, MaterialPageRoute(builder: (context) => DoctorDetailScreen()));
-//       },
-//       child: Container(
-//         decoration: BoxDecoration(
-//           color: Colors.white,
-//           borderRadius: BorderRadius.circular(16),
-//           boxShadow: [
-//             BoxShadow(
-//               color: Colors.black12,
-//               blurRadius: 8,
-//               offset: Offset(0, 4),
-//             ),
-//           ],
-//         ),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Container(
-//               padding: EdgeInsets.all(12),
-//               child: Row(
-//                 children: [
-//                   Container(
-//                     width: 45,
-//                     height: 45,
-//                     decoration: BoxDecoration(
-//                       color: Colors.green[500],
-//                       shape: BoxShape.circle,
-//                     ),
-//                     child: Center(
-//                       child: Text(
-//                         firstLetter,
-//                         style: TextStyle(
-//                           fontSize: 16,
-//                           fontWeight: FontWeight.bold,
-//                           color: Colors.white,
-//                         ),
-//                       ),
-//                     ),
-//                   ),
-//                   SizedBox(width: 10),
-//                   Expanded(
-//                     child: Column(
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         Text(
-//                           doctor.name.isNotEmpty ? doctor.name : 'Unknown Doctor',
-//                           style: TextStyle(
-//                             fontSize: 14,
-//                             fontWeight: FontWeight.bold,
-//                             color: Colors.grey[800],
-//                           ),
-//                           maxLines: 1,
-//                           overflow: TextOverflow.ellipsis,
-//                         ),
-//                         SizedBox(height: 3),
-//                         Text(
-//                           doctor.specialty,
-//                           style: TextStyle(
-//                             fontSize: 11,
-//                             color: Colors.green[600],
-//                             fontWeight: FontWeight.w500,
-//                           ),
-//                           maxLines: 1,
-//                           overflow: TextOverflow.ellipsis,
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-            
-//             Padding(
-//               padding: EdgeInsets.symmetric(horizontal: 12),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   if (doctor.qualification != null && doctor.qualification!.isNotEmpty)
-//                     Text(
-//                       doctor.qualification!,
-//                       style: TextStyle(
-//                         fontSize: 10,
-//                         color: Colors.grey[600],
-//                         height: 1.2,
-//                       ),
-//                       maxLines: 2,
-//                       overflow: TextOverflow.ellipsis,
-//                     ),
-//                   SizedBox(height: 6),
-//                   Row(
-//                     children: [
-//                       Icon(Icons.local_hospital_rounded, size: 11, color: Colors.grey[500]),
-//                       SizedBox(width: 3),
-//                       Expanded(
-//                         child: Text(
-//                           doctor.hospitalName ?? 'Hospital',
-//                           style: TextStyle(
-//                             fontSize: 10,
-//                             color: Colors.grey[600],
-//                           ),
-//                           maxLines: 1,
-//                           overflow: TextOverflow.ellipsis,
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//             ),
-            
-//             Spacer(),
-            
-//             Container(
-//               width: double.infinity,
-//               margin: EdgeInsets.all(12),
-//               child: ElevatedButton(
-//                 onPressed: () => _showBookingSheet(context, doctor),
-//                 style: ElevatedButton.styleFrom(
-//                   backgroundColor: doctor.bookingOpen ? Colors.green : Colors.grey[400],
-//                   foregroundColor: Colors.white,
-//                   padding: EdgeInsets.symmetric(vertical: 8),
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(10),
-//                   ),
-//                   elevation: 0,
-//                 ),
-//                 child: Row(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: [
-//                     Icon(Icons.calendar_today_rounded, size: 12),
-//                     SizedBox(width: 4),
-//                     Text(
-//                       doctor.bookingOpen ? 'BOOK' : 'CLOSED',
-//                       style: TextStyle(
-//                         fontSize: 10,
-//                         fontWeight: FontWeight.bold,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   void _showBookingSheet(BuildContext context, Doctor doctor) {
-//     if (!doctor.bookingOpen) {
-//       showTopSnackBar(context, 'Booking is currently closed for Dr. ${doctor.name}', isError: true);
-//       return;
-//     }
-
-//     showModalBottomSheet(
-//       context: context,
-//       isScrollControlled: true,
-//       backgroundColor: Colors.transparent,
-//       builder: (context) {
-//         return BookingForm(doctor: doctor);
-//       },
-//     );
-//   }
-// }
-
-// // BookingForm (embedded in same file for now)
-// class BookingForm extends ConsumerStatefulWidget {
-//   final Doctor doctor;
-
-//   const BookingForm({super.key, required this.doctor});
-
-//   @override
-//   ConsumerState<BookingForm> createState() => _BookingFormState();
-// }
-
-// class _BookingFormState extends ConsumerState<BookingForm> {
-//   final TextEditingController patientNameController = TextEditingController();
-//   final TextEditingController phoneController = TextEditingController();
-//   final TextEditingController placeController = TextEditingController();
-//   DateTime? dob;
-//   DateTime? appointmentDate;
-//   final ScrollController _scrollController = ScrollController();
-//   final FocusNode _phoneFocusNode = FocusNode();
-//   final FocusNode _placeFocusNode = FocusNode();
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _phoneFocusNode.addListener(() {
-//       if (_phoneFocusNode.hasFocus) {
-//         _scrollToField(1);
-//       }
-//     });
-//     _placeFocusNode.addListener(() {
-//       if (_placeFocusNode.hasFocus) {
-//         _scrollToField(2);
-//       }
-//     });
-//   }
-
-//   void _scrollToField(int fieldIndex) {
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       _scrollController.animateTo(
-//         (fieldIndex * 80.0),
-//         duration: Duration(milliseconds: 300),
-//         curve: Curves.easeInOut,
-//       );
-//     });
-//   }
-
-//   @override
-//   void dispose() {
-//     _scrollController.dispose();
-//     _phoneFocusNode.dispose();
-//     _placeFocusNode.dispose();
-//     patientNameController.dispose();
-//     phoneController.dispose();
-//     placeController.dispose();
-//     super.dispose();
-//   }
-
-//   List<String> get availableDays {
-//     return widget.doctor.consulting
-//         .where((day) => day.sessions.isNotEmpty)
-//         .map((day) => day.day)
-//         .toList();
-//   }
-
-//   bool _isDateEnabled(DateTime date) {
-//     if (availableDays.isEmpty) {
-//       return true;
-//     }
-    
-//     final dayName = _getDayName(date.weekday);
-//     return availableDays.any((availableDay) {
-//       return availableDay.toLowerCase().trim() == dayName.toLowerCase().trim();
-//     });
-//   }
-
-//   String _getDayName(int weekday) {
-//     switch (weekday) {
-//       case 1: return 'Monday';
-//       case 2: return 'Tuesday';
-//       case 3: return 'Wednesday';
-//       case 4: return 'Thursday';
-//       case 5: return 'Friday';
-//       case 6: return 'Saturday';
-//       case 7: return 'Sunday';
-//       default: return 'Unknown';
-//     }
-//   }
-
-//   Future<void> _handleBooking() async {
-//     // Get the booking notifier
-//     final bookingNotifierAsync = ref.read(bookingProviderWithPrefs);
-    
-//     bookingNotifierAsync.when(
-//       data: (bookingNotifier) async {
-//         final bookingState = bookingNotifier.state;
-        
-//         if (bookingState.isSubmitting) return;
-
-//         final success = await bookingNotifier.handleBooking(
-//           context: context,
-//           doctor: widget.doctor,
-//           patientName: patientNameController.text,
-//           patientPhone: phoneController.text,
-//           patientPlace: placeController.text,
-//           patientDob: dob,
-//           appointmentDate: appointmentDate,
-//           onSuccess: () {
-//             Navigator.pop(context);
-//           },
-//           showSnackBar: (message, isError) {
-//             showTopSnackBar(context, message, isError: isError);
-//           },
-//         );
-
-//         if (success) {
-//           // Reset form if needed
-//           patientNameController.clear();
-//           phoneController.clear();
-//           placeController.clear();
-//           setState(() {
-//             dob = null;
-//             appointmentDate = null;
-//           });
-//         }
-//       },
-//       loading: () {
-//         showTopSnackBar(context, 'Loading...', isError: false);
-//       },
-//       error: (error, stack) {
-//         showTopSnackBar(context, 'Error initializing booking: $error', isError: true);
-//       },
-//     );
-//   }
-
-//   void _showLoginDialog() {
-//     showDialog(
-//       context: context,
-//       builder: (context) => AlertDialog(
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-//         title: Text('Sign In Required', style: TextStyle(fontWeight: FontWeight.bold)),
-//         content: Text('Please sign in to book appointments and access all features.'),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: Text('Cancel', style: TextStyle(color: Colors.grey)),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               Navigator.pop(context);
-//               Navigator.push(
-//                 context,
-//                 MaterialPageRoute(builder: (_) => const Signin()),
-//               );
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: Colors.green,
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-//             ),
-//             child: Text('Sign In', style: TextStyle(color: Colors.white)),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final bookingNotifierAsync = ref.watch(bookingProviderWithPrefs);
-    
-//     return bookingNotifierAsync.when(
-//       data: (bookingNotifier) {
-//         final isSubmitting = bookingNotifier.state.isSubmitting;
-        
-//         String firstLetter = 'D';
-//         if (widget.doctor.name.trim().isNotEmpty) {
-//           firstLetter = widget.doctor.name.trim()[0].toUpperCase();
-//         }
-        
-//         return Container(
-//           height: MediaQuery.of(context).size.height * 0.85,
-//           decoration: BoxDecoration(
-//             color: Colors.white,
-//             borderRadius: BorderRadius.only(
-//               topLeft: Radius.circular(30),
-//               topRight: Radius.circular(30),
-//             ),
-//           ),
-//           child: Column(
-//             children: [
-//               Container(
-//                 padding: EdgeInsets.all(20),
-//                 decoration: BoxDecoration(
-//                   color: Colors.green[50],
-//                   borderRadius: BorderRadius.only(
-//                     topLeft: Radius.circular(30),
-//                     topRight: Radius.circular(30),
-//                   ),
-//                 ),
-//                 child: Row(
-//                   children: [
-//                     Container(
-//                       width: 50,
-//                       height: 50,
-//                       decoration: BoxDecoration(
-//                         color: Colors.green[500],
-//                         shape: BoxShape.circle,
-//                       ),
-//                       child: Center(
-//                         child: Text(
-//                           firstLetter,
-//                           style: TextStyle(
-//                             fontSize: 18,
-//                             fontWeight: FontWeight.bold,
-//                             color: Colors.white,
-//                           ),
-//                         ),
-//                       ),
-//                     ),
-//                     SizedBox(width: 12),
-//                     Expanded(
-//                       child: Column(
-//                         crossAxisAlignment: CrossAxisAlignment.start,
-//                         children: [
-//                           Text(
-//                             'Book Appointment',
-//                             style: TextStyle(
-//                               fontSize: 18,
-//                               fontWeight: FontWeight.bold,
-//                               color: Colors.grey[800],
-//                             ),
-//                           ),
-//                           Text(
-//                             'Dr. ${widget.doctor.name}',
-//                             style: TextStyle(
-//                               fontSize: 14,
-//                               color: Colors.grey[600],
-//                             ),
-//                           ),
-//                         ],
-//                       ),
-//                     ),
-//                     if (!isSubmitting)
-//                       IconButton(
-//                         onPressed: () => Navigator.pop(context),
-//                         icon: Icon(Icons.close_rounded, color: Colors.grey[600]),
-//                       ),
-//                   ],
-//                 ),
-//               ),
-              
-//               Expanded(
-//                 child: Padding(
-//                   padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-//                   child: SingleChildScrollView(
-//                     controller: _scrollController,
-//                     padding: EdgeInsets.all(20),
-//                     child: Column(
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         Text(
-//                           'Patient Information',
-//                           style: TextStyle(
-//                             fontSize: 18,
-//                             fontWeight: FontWeight.bold,
-//                             color: Colors.grey[800],
-//                           ),
-//                         ),
-//                         SizedBox(height: 16),
-                        
-//                         _buildInputField('Full Name', patientNameController, Icons.person_outline),
-//                         SizedBox(height: 16),
-//                         _buildInputField(
-//                           'Phone Number', 
-//                           phoneController, 
-//                           Icons.phone_android_outlined, 
-//                           focusNode: _phoneFocusNode,
-//                           keyboardType: TextInputType.phone
-//                         ),
-//                         SizedBox(height: 16),
-//                         _buildDateField('Date of Birth', dob, Icons.cake_outlined, (picked) => setState(() => dob = picked), isPastOnly: true),
-//                         SizedBox(height: 16),
-//                         _buildInputField(
-//                           'Place', 
-//                           placeController, 
-//                           Icons.location_on_outlined,
-//                           focusNode: _placeFocusNode,
-//                         ),
-//                         SizedBox(height: 16),
-//                         _buildDateField('Appointment Date', appointmentDate, Icons.calendar_today_outlined, (picked) => setState(() => appointmentDate = picked), isPastOnly: false),
-                        
-//                         if (availableDays.isNotEmpty) ...[
-//                           SizedBox(height: 16),
-//                           Container(
-//                             padding: EdgeInsets.all(12),
-//                             decoration: BoxDecoration(
-//                               color: Colors.green[50],
-//                               borderRadius: BorderRadius.circular(10),
-//                               border: Border.all(color: Colors.green[100]!),
-//                             ),
-//                             child: Row(
-//                               children: [
-//                                 Icon(Icons.info_outline, color: Colors.green[600], size: 16),
-//                                 SizedBox(width: 8),
-//                                 Expanded(
-//                                   child: Text(
-//                                     'Doctor is available on: ${availableDays.join(', ')}',
-//                                     style: TextStyle(
-//                                       fontSize: 12,
-//                                       color: Colors.green[800],
-//                                     ),
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                           ),
-//                         ],
-                        
-//                         SizedBox(height: 20),
-//                       ],
-//                     ),
-//                   ),
-//                 ),
-//               ),
-              
-//               Container(
-//                 padding: EdgeInsets.all(20),
-//                 decoration: BoxDecoration(
-//                   color: Colors.white,
-//                   boxShadow: [
-//                     BoxShadow(
-//                       color: Colors.black12,
-//                       blurRadius: 10,
-//                       offset: Offset(0, -2),
-//                     ),
-//                   ],
-//                 ),
-//                 child: SizedBox(
-//                   width: double.infinity,
-//                   child: isSubmitting
-//                       ? _buildLoadingButton()
-//                       : _buildBookButton(),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         );
-//       },
-//       loading: () => Container(
-//         height: MediaQuery.of(context).size.height * 0.85,
-//         child: Center(child: CircularProgressIndicator()),
-//       ),
-//       error: (error, stack) => Container(
-//         height: MediaQuery.of(context).size.height * 0.85,
-//         child: Center(child: Text('Error: $error')),
-//       ),
-//     );
-//   }
-
-//   Widget _buildBookButton() {
-//     return ElevatedButton(
-//       onPressed: _handleBooking,
-//       style: ElevatedButton.styleFrom(
-//         backgroundColor: Colors.green,
-//         padding: EdgeInsets.symmetric(vertical: 16),
-//         shape: RoundedRectangleBorder(
-//           borderRadius: BorderRadius.circular(15),
-//         ),
-//       ),
-//       child: Text(
-//         'NG',
-//         style: TextStyle(
-//           color: Colors.white,
-//           fontSize: 16,
-//           fontWeight: FontWeight.bold,
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildLoadingButton() {
-//     return Container(
-//       height: 56,
-//       decoration: BoxDecoration(
-//         color: Colors.green.withOpacity(0.7),
-//         borderRadius: BorderRadius.circular(15),
-//       ),
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         children: [
-//           SizedBox(
-//             width: 20,
-//             height: 20,
-//             child: CircularProgressIndicator(
-//               strokeWidth: 2,
-//               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-//             ),
-//           ),
-//           SizedBox(width: 12),
-//           Text(
-//             'BOOKING...',
-//             style: TextStyle(
-//               color: Colors.white,
-//               fontSize: 16,
-//               fontWeight: FontWeight.bold,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildInputField(String label, TextEditingController controller, IconData icon, {
-//     TextInputType keyboardType = TextInputType.text,
-//     FocusNode? focusNode,
-//   }) {
-//     final isSubmitting = ref.read(bookingProviderWithPrefs).maybeWhen(
-//       data: (notifier) => notifier.state.isSubmitting,
-//       orElse: () => false,
-//     );
-    
-//     return TextField(
-//       controller: controller,
-//       focusNode: focusNode,
-//       keyboardType: keyboardType,
-//       enabled: !isSubmitting,
-//       decoration: InputDecoration(
-//         labelText: label,
-//         prefixIcon: Icon(icon, color: Colors.grey[500]),
-//         border: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: BorderSide(color: Colors.grey[300]!),
-//         ),
-//         enabledBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: BorderSide(color: Colors.grey[300]!),
-//         ),
-//         focusedBorder: OutlineInputBorder(
-//           borderRadius: BorderRadius.circular(12),
-//           borderSide: BorderSide(color: Colors.green),
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildDateField(String label, DateTime? date, IconData icon, Function(DateTime) onPicked, {required bool isPastOnly}) {
-//     final isSubmitting = ref.read(bookingProviderWithPrefs).maybeWhen(
-//       data: (notifier) => notifier.state.isSubmitting,
-//       orElse: () => false,
-//     );
-    
-//     return InkWell(
-//       onTap: isSubmitting ? null : () async {
-//         final now = DateTime.now();
-//         final firstDate = isPastOnly ? DateTime(1900) : now;
-//         final lastDate = isPastOnly ? now : DateTime(now.year + 1);
-        
-//         final picked = await showDatePicker(
-//           context: context,
-//           initialDate: date ?? now,
-//           firstDate: firstDate,
-//           lastDate: lastDate,
-//           selectableDayPredicate: isPastOnly ? null : _isDateEnabled,
-//         );
-        
-//         if (picked != null) {
-//           setState(() => onPicked(picked));
-//         }
-//       },
-//       child: InputDecorator(
-//         decoration: InputDecoration(
-//           labelText: label,
-//           prefixIcon: Icon(icon, color: Colors.grey[500]),
-//           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-//           enabledBorder: OutlineInputBorder(
-//             borderRadius: BorderRadius.circular(12),
-//             borderSide: BorderSide(color: Colors.grey[300]!),
-//           ),
-//           focusedBorder: OutlineInputBorder(
-//             borderRadius: BorderRadius.circular(12),
-//             borderSide: BorderSide(color: Colors.green),
-//           ),
-//         ),
-//         child: Row(
-//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//           children: [
-//             Text(
-//               date == null ? "Select Date" : "${date.day}/${date.month}/${date.year}",
-//               style: TextStyle(
-//                 fontSize: 14, 
-//                 color: date == null ? Colors.grey[400] : Colors.grey[800]
-//               ),
-//             ),
-//             Icon(Icons.arrow_drop_down_rounded, color: Colors.grey[500]),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-
-
-
 
 
 
