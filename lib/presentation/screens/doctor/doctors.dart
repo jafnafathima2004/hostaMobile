@@ -5,7 +5,6 @@ import 'package:hosta/data/models/doctor_model.dart';
 import 'package:hosta/presentation/screens/auth/signin.dart';
 import 'package:hosta/presentation/screens/doctor/doctor_detail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:table_calendar/table_calendar.dart';
 import '../../../services/api_service.dart';
 
 class Doctors extends StatefulWidget {
@@ -33,9 +32,9 @@ class _DoctorsState extends State<Doctors> {
   Future<void> _fetchDoctors() async {
     try {
       final response = await ApiService().getDoctors(
-        id: widget.hospitalId,
-        specialty: widget.specialty,
-      );
+  hospitalId: widget.hospitalId,
+  speciality: widget.specialty,
+);
 
       
       if (response.data['success'] == true) {

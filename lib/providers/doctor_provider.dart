@@ -85,7 +85,7 @@ class DoctorsNotifier extends StateNotifier<DoctorsState> {
       
       final response = await _apiService.getDoctors(
         id: hospitalId,
-        specialty: specialty,
+         speciality: specialty,
       );
 
       if (response.data['success'] == true) {

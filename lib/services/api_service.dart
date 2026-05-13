@@ -151,22 +151,6 @@ Future<Response> updateDonor(String id, Map<String, dynamic> data) async {
       , data: data);
   }
 
-  // OTP
-  // SEND OTP
-// Future<Response> sendOtp(Map<String, dynamic> data) async {
-//   return await _dio.post(
-//     '/users/auth/send-otp',
-//     data: data,
-//   );
-// }
-
-// // VERIFY OTP
-// Future<Response> verifyOtp(Map<String, dynamic> data) async {
-//   return await _dio.post(
-//     '/users/auth/verify-otp',
-//     data: data,
-//   );
-// }
   Future<Response> otpUser(Map<String, dynamic> data) async {
     return await _dio.post(
       '/api/users/otp'
@@ -299,21 +283,18 @@ Future<Response> editAmbulance(String id, Map<String, dynamic> updatedData) asyn
 
 
 
- Future<Response> getDoctors({required String id, required String specialty}) async {
-  return await _dio.get(
-    '/api/doctor',
-    queryParameters: {
-      'id': id,
-      'speciality': specialty,
-    },
-  );
-}
-// GET all doctors for a specific hospital (no specialty filter)
-Future<Response> getDoctorsByHospital(String hospitalId) async {
-  return await _dio.get(
-    '/api/doctor',
-    queryParameters: {'hospitalId': hospitalId},
-  );
+/// Get doctors with optional filters
+Future<Response> getDoctors({
+  String? hospitalId,
+  String? speciality,
+  String? id,
+}) async {
+  final queryParams = <String, dynamic>{};
+  if (hospitalId != null) queryParams['hospitalId'] = hospitalId;
+  if (speciality != null) queryParams['speciality'] = speciality;
+  if (id != null) queryParams['id'] = id;
+
+  return await _dio.get('/api/doctor', queryParameters: queryParams);
 }
 
 

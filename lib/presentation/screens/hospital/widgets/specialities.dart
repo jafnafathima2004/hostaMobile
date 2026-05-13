@@ -35,7 +35,7 @@ class _SpecialtiesTabState extends State<SpecialtiesTab> {
       }
 
       // Call your existing endpoint: /doctor?hospitalId=...
-      final response = await _apiService.getDoctorsByHospital(hospitalId);
+     final response = await _apiService.getDoctors(hospitalId: hospitalId);
       List<dynamic> doctors = [];
 
       // Parse response (adjust based on your actual API structure)

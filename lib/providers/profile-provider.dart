@@ -88,68 +88,34 @@ class UserDataNotifier extends StateNotifier<UserDataState> {
       state = state.copyWith(isLoading: false);
     }
   }
-
-  Future<void> loadProfile() async {
-    if (state.userId == null || state.userId!.isEmpty) {
-      state = state.copyWith(isLoading: false);
-      return;
-    }
-
-    state = state.copyWith(isLoading: true);
-
-    try {
-      // Always load user data
-      final userRes = await _apiService.getAUser(state.userId!);
-
-      // Try to load donor data, but handle 404 gracefully
-      dynamic donorRes;
-      try {
-        donorRes = await _apiService.getADonor(state.userId!);
-        print("✅ Donor data found for user");
-      } catch (e) {
-        // Check if it's a 404 error (donor not found) - this is normal for non-donors
-        if (e.toString().contains('404') ||
-            e.toString().contains('Client error')) {
-          print("ℹ️ No donor record found for user (this is normal for non-donors)");
-          donorRes = null;
-        } else {
-          // Re-throw if it's a different error
-          print("❌ Error loading donor data: $e");
-          donorRes = null;
-        }
-      }
-
-      final userData = userRes.data?['data'] ?? userRes.data ?? {};
-      
-      // Handle donor data based on the response
-      Map<String, dynamic>? donorData;
-      if (donorRes == null) {
-        donorData = null; // No donor record exists
-      } else if (donorRes.data is List) {
-        donorData = donorRes.data.isNotEmpty ? donorRes.data[0] : {};
-      } else {
-        donorData = donorRes.data ?? {};
-      }
-
-      // Set original values
-      final originalName = (userData['name'] ?? '').toString();
-      final originalEmail = (userData['email'] ?? '').toString();
-      final originalPhone = (userData['phone'] ?? '').toString();
-
-      state = state.copyWith(
-        userData: userData,
-        donorData: donorData,
-        isLoading: false,
-        originalName: originalName,
-        originalEmail: originalEmail,
-        originalPhone: originalPhone,
-      );
-    } catch (e) {
-      print("❌ Error loading profile: $e");
-      state = state.copyWith(isLoading: false);
-      throw e;
-    }
+Future<void> loadProfile() async {
+  if (state.userId == null || state.userId!.isEmpty) {
+    state = state.copyWith(isLoading: false);
+    return;
   }
+
+  state = state.copyWith(isLoading: true);
+  try {
+    final userRes = await _apiService.getAUser(state.userId!);
+    final innerData = userRes.data?['data'] ?? userRes.data;
+    if (innerData == null) throw Exception("No user data");
+
+    final originalName = innerData['name']?.toString() ?? '';
+    final originalEmail = innerData['email']?.toString() ?? '';
+    final originalPhone = innerData['phone']?.toString() ?? '';
+
+    state = state.copyWith(
+      userData: innerData,
+      isLoading: false,
+      originalName: originalName,
+      originalEmail: originalEmail,
+      originalPhone: originalPhone,
+    );
+  } catch (e) {
+    print("❌ loadProfile error: $e");
+    state = state.copyWith(isLoading: false);
+  }
+}
 
   void enableEditing() {
     state = state.copyWith(isEditing: true);
