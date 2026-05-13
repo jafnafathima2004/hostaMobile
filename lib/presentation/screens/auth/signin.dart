@@ -989,33 +989,44 @@ class _SigninState extends State<Signin> {
   final ApiService _apiService = ApiService();
 
   bool isSendingOtp = false;
-  String? receivedOtp;
   String? phoneError;
 
+  // Clean phone number to 10 digits only
+  String _cleanPhoneNumber(String phone) {
+    // Remove all non-digit characters
+    String cleaned = phone.replaceAll(RegExp(r'[^\d]'), '');
+    
+    // Remove +91 or 91 prefix if present
+    if (cleaned.startsWith('91') && cleaned.length > 10) {
+      cleaned = cleaned.substring(2);
+    }
+    
+    // Ensure we only have the last 10 digits
+    if (cleaned.length > 10) {
+      cleaned = cleaned.substring(cleaned.length - 10);
+    }
+    
+    log("📱 Cleaned phone number: $cleaned");
+    return cleaned;
+  }
+
   bool _validatePhoneNumber(String phone) {
-    String cleaned = phone.replaceAll(RegExp(r'[^\d+]'), '');
-
-    if (!cleaned.startsWith('+')) {
+    String cleaned = _cleanPhoneNumber(phone);
+    
+    if (cleaned.isEmpty) {
       setState(() {
-        phoneError = 'Phone number must include country code (e.g., +91)';
+        phoneError = 'Please enter a phone number';
       });
       return false;
     }
-
-    int digitCount = cleaned.replaceAll('+', '').length;
-
-    if (digitCount < 10) {
+    
+    if (cleaned.length != 10) {
       setState(() {
-        phoneError = 'Phone number must have at least 10 digits';
-      });
-      return false;
-    } else if (digitCount > 15) {
-      setState(() {
-        phoneError = 'Phone number cannot exceed 15 digits';
+        phoneError = 'Please enter a valid 10-digit mobile number';
       });
       return false;
     }
-
+    
     setState(() {
       phoneError = null;
     });
@@ -1024,78 +1035,163 @@ class _SigninState extends State<Signin> {
 
   Future<void> _sendOtp() async {
     String rawPhone = phoneController.text.trim();
+    String cleanPhone = _cleanPhoneNumber(rawPhone);
     
-    // Clean phone number - remove +91, spaces, dashes
-    String cleanedPhone = rawPhone
-        .replaceAll('+', '')
-        .replaceAll(' ', '')
-        .replaceAll('-', '');
+    log("🚀 Sending OTP for phone: $cleanPhone");
     
-    // Remove 91 if present (91 9876543210 -> 9876543210)
-    if (cleanedPhone.startsWith('91') && cleanedPhone.length == 12) {
-      cleanedPhone = cleanedPhone.substring(2);
-    }
-    
-    // Validate - must be exactly 10 digits
-    if (cleanedPhone.length != 10) {
-      setState(() {
-        phoneError = "Enter 10-digit mobile number";
-      });
+    // Validate phone number
+    if (!_validatePhoneNumber(cleanPhone)) {
       return;
     }
-    
+
     setState(() {
-      phoneError = null;
       isSendingOtp = true;
+      phoneError = null;
     });
-    
+
     try {
-      // Send CLEANED phone number
-      final response = await _apiService.loginUser({"phone": cleanedPhone});
+      // Try different phone number formats that your backend might expect
+      // Format 1: Just 10 digits (most common)
+      final requestData = {"phone": cleanPhone};
       
-      log("status:${response.statusCode}");
-      log("Data:${response.data}");
+      // Format 2: With country code (uncomment if above doesn't work)
+      // final requestData = {"phone": "+91$cleanPhone"};
       
+      // Format 3: With 91 prefix (uncomment if needed)
+      // final requestData = {"phone": "91$cleanPhone"};
+      
+      log("📤 API Request - Endpoint: /users/login");
+      log("📤 Request data: $requestData");
+      
+      final response = await _apiService.loginUser(requestData);
+      
+      log("📥 Response status: ${response.statusCode}");
+      log("📥 Response data: ${response.data}");
+
       setState(() => isSendingOtp = false);
-      
-      if (response.statusCode == 200 && response.data["status"] == 200) {
-        final backendOtp = response.data["otp"]?.toString();
-        if (backendOtp != null && backendOtp.length == 6) {
-          setState(() {
-            receivedOtp = backendOtp;
-          });
-          _showLoadingAndThenOtp(cleanedPhone, backendOtp);
+
+      // Check for successful response
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Check different possible success indicators
+        if (response.data["status"] == 200 || 
+            response.data["success"] == true ||
+            response.data["otp"] != null) {
+          
+          final backendOtp = response.data["otp"]?.toString();
+          final message = response.data["message"];
+          
+          log("✅ OTP sent successfully!");
+          log("🔑 Backend OTP: $backendOtp");
+          log("💬 Message: $message");
+          
+          if (backendOtp != null && backendOtp.length == 6) {
+            _showLoadingAndThenOtp(cleanPhone, backendOtp);
+          } else {
+            // Still show OTP screen even if no OTP in response (user will enter manually)
+            _showOtpPopup(cleanPhone, null);
+          }
         } else {
-          _showOtpPopup(cleanedPhone, null);
+          // API returned success status code but indicates failure in response body
+          String errorMsg = response.data['message'] ?? 'Failed to send OTP';
+          log("❌ API returned error: $errorMsg");
+          
+          if (errorMsg.toLowerCase().contains('user') && 
+              errorMsg.toLowerCase().contains('not found')) {
+            // User not registered - show signup option
+            _showUserNotFoundDialog(errorMsg);
+          } else {
+            _showErrorDialog(errorMsg);
+          }
         }
       } else {
-        _showOtpPopup(cleanedPhone, null);
+        // HTTP error status code
+        String errorMsg = response.data['message'] ?? 'Failed to send OTP';
+        log("❌ HTTP Error ${response.statusCode}: $errorMsg");
+        _showErrorDialog(errorMsg);
       }
     } on DioException catch (dioError) {
       setState(() => isSendingOtp = false);
       
+      log("❌ DioException occurred");
+      log("Error type: ${dioError.type}");
+      log("Error message: ${dioError.message}");
+      
       String errorMessage = "Something went wrong";
+      
       if (dioError.response != null) {
+        log("Response status: ${dioError.response?.statusCode}");
+        log("Response data: ${dioError.response?.data}");
         try {
-          errorMessage = dioError.response?.data['message'] ?? errorMessage;
+          errorMessage = dioError.response?.data['message'] ?? 
+                        dioError.response?.data['error'] ?? 
+                        errorMessage;
         } catch (_) {}
+      } else if (dioError.type == DioExceptionType.connectionTimeout) {
+        errorMessage = "Connection timeout. Please check your internet.";
+      } else if (dioError.type == DioExceptionType.receiveTimeout) {
+        errorMessage = "Server not responding. Please try again.";
+      } else if (dioError.type == DioExceptionType.connectionError) {
+        errorMessage = "No internet connection. Please check your network.";
+      } else if (dioError.type == DioExceptionType.cancel) {
+        errorMessage = "Request cancelled.";
       }
       
-      if (errorMessage.toLowerCase().contains('phone') ||
-          errorMessage.toLowerCase().contains('number')) {
-        setState(() {
-          phoneError = errorMessage;
-        });
-      } else {
-        showTopSnackBar(context, errorMessage, isError: true);
-      }
+      _showErrorDialog(errorMessage);
     } catch (e) {
       setState(() => isSendingOtp = false);
-      showTopSnackBar(context, "Failed to send OTP: $e", isError: true);
+      log("❌ Unexpected error: $e");
+      _showErrorDialog("Failed to send OTP: $e");
+    }
+  }
+  
+  void _showErrorDialog(String message) {
+    log("⚠️ Showing error: $message");
+    
+    if (message.toLowerCase().contains('phone') ||
+        message.toLowerCase().contains('number') ||
+        message.toLowerCase().contains('invalid')) {
+      setState(() {
+        phoneError = message;
+      });
+    } else {
+      showTopSnackBar(context, message, isError: true);
     }
   }
 
+  void _showUserNotFoundDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Account Not Found"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const Signup()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              child: const Text("Sign Up"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showLoadingAndThenOtp(String phone, String backendOtp) {
+    log("📱 Showing loading dialog for phone: +91$phone");
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1148,7 +1244,7 @@ class _SigninState extends State<Signin> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "We're sending a 6-digit code to\n$phone",
+                  "We're sending a 6-digit code to\n+91$phone",
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
@@ -1168,22 +1264,33 @@ class _SigninState extends State<Signin> {
     });
   }
 
-  void _showOtpPopup(String phone, String? backendOtp) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return OtpVerification(
-          phone: phone,
+void _showOtpPopup(String phone, String? backendOtp) {
+  log("🔐 Showing OTP dialog for phone: +91$phone");
+  log("🔑 With backend OTP: $backendOtp");
+  
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) {
+      return Dialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: MediaQuery.of(context).size.width * 0.05,
+          vertical: MediaQuery.of(context).size.height * 0.05,
+        ),
+        child: OtpVerification(
+          phone: "+91$phone", // Keep +91 for display only
           backendOtp: backendOtp,
           apiService: _apiService,
           onResendOtp: () {
+            log("🔄 Resend OTP requested");
+            Navigator.pop(dialogContext);
             _sendOtp();
           },
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -1199,24 +1306,17 @@ class _SigninState extends State<Signin> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final screenWidth = MediaQuery.of(context).size.width;
-            final screenHeight = MediaQuery.of(context).size.height;
-            
             final isSmallScreen = screenWidth < 360;
-            final isLargeScreen = screenWidth > 600;
             final isTablet = screenWidth > 768;
             
             final horizontalPadding = isTablet ? 48.0 : (isSmallScreen ? 16.0 : 24.0);
             final verticalPadding = isTablet ? 48.0 : 24.0;
-            
             final iconContainerSize = isSmallScreen ? 60.0 : (isTablet ? 100.0 : 80.0);
             final iconSize = isSmallScreen ? 30.0 : (isTablet ? 50.0 : 40.0);
-            
             final welcomeFontSize = isSmallScreen ? 24.0 : (isTablet ? 36.0 : 28.0);
             final subtitleFontSize = isSmallScreen ? 14.0 : (isTablet ? 18.0 : 16.0);
             final buttonFontSize = isSmallScreen ? 14.0 : 16.0;
-            
             final buttonHeight = isSmallScreen ? 48.0 : (isTablet ? 60.0 : 55.0);
-            
             final spacing1 = isSmallScreen ? 12.0 : (isTablet ? 24.0 : 20.0);
             final spacing2 = isSmallScreen ? 24.0 : (isTablet ? 48.0 : 32.0);
             

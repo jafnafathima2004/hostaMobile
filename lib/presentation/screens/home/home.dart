@@ -403,8 +403,30 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     });  
     }
   }
+  
 
+  Future<void> _navigateToDoctors(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    String? hospitalId = prefs.getString('selected_hospital_id');
 
+     String finalHospitalId = hospitalId ?? '4';
+
+    if (hospitalId == null || hospitalId.isEmpty) {
+      hospitalId = '4';
+    }
+    
+    if (!mounted) return;
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Doctors(
+          hospitalId: finalHospitalId,
+          specialty: '',
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
