@@ -73,6 +73,88 @@ class _OtpVerificationState extends State<OtpVerification> {
     }
   }
 
+  // Future<void> _verifyOtp() async {
+  //   String otp = otpController.text;
+  //   String rawPhone = widget.phone;
+    
+  //    // ✅ Clean phone number again if needed
+  // String Phone = rawPhone
+  //     .replaceAll('+', '')
+  //     .replaceAll(' ', '')
+  //     .replaceAll('-', '');
+       
+  // if (Phone.startsWith('91') && cleanPhone.length == 12) {
+  //   Phone = phone.substring(2);
+  // }
+  
+  //   if (otp.length != 6) {
+  //     setState(() {
+  //       otpError = "Please enter a valid 6-digit OTP";
+  //     });
+  //     return;
+  //   }
+
+  //   setState(() {
+  //     isVerifying = true;
+  //     otpError = null;
+  //   });
+
+  //   try {
+  //     String? token = await FirebaseMsg().token;
+
+  //     final response = await widget.apiService.otpUser({
+  //      //"phone": widget.phone, 
+  //       "phone": cleanPhone,
+  //       "otp": otp,
+  //       "FcmToken": token,
+  //     });
+
+  //     if (response.statusCode == 200 && response.data["status"] == 200) {
+  //       final userId = response.data["userDetails"]["_id"];
+  //       final userPhone = response.data["userDetails"]["phone"];
+  //       final donorId = response.data["userDetails"]["donorId"];
+
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.setString('userId', userId);
+  //       await prefs.setString('userPhone', userPhone);
+
+  //       if (donorId != null && donorId.toString().isNotEmpty) {
+  //         await prefs.setString('bloodId', donorId.toString());
+  //       }
+
+  //       if (mounted) {
+  //         showTopSnackBar(context, "Login successful!");
+  //         Navigator.pushAndRemoveUntil(
+  //           context,
+  //           MaterialPageRoute(builder: (context) => const Bottomnav()),
+  //           (route) => false,
+  //         );
+  //       }
+  //     } else {
+  //       setState(() {
+  //         otpError = response.data["message"] ?? "Invalid OTP. Please try again.";
+  //         isVerifying = false;
+  //       });
+  //     }
+  //   } on DioException catch (dioError) {
+  //     String errorMessage = "Something went wrong";
+  //     if (dioError.response != null) {
+  //       try {
+  //         errorMessage = dioError.response?.data['message'] ?? errorMessage;
+  //       } catch (_) {}
+  //     }
+  //     setState(() {
+  //       otpError = errorMessage;
+  //       isVerifying = false;
+  //     });
+  //   } catch (e) {
+  //     setState(() {
+  //       otpError = "Invalid OTP. Please try again.";
+  //       isVerifying = false;
+  //     });
+  //   }
+  // }
+
   Future<void> _verifyOtp() async {
     // FIXED: Prevent duplicate API calls
     if (isVerifying) return;

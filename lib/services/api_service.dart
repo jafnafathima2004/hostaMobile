@@ -25,10 +25,28 @@ class ApiService {
       retryableExtraStatuses: {429},
     ));
   }
+//  final Dio _dio = Dio(BaseOptions(baseUrl: 'https://zorrowtek.in',
+//  connectTimeout: const Duration(seconds: 30),
+//     receiveTimeout: const Duration(seconds: 30),));
+ 
 // http://10.0.2.2:3000
 // https://www.zorrowtek.in
 
  // GET all carousel
+
+// Refresh Token - 
+Future<Response> refreshUserToken(Map<String, dynamic> data) async {
+  return await _dio.post('/api/users/refreshToken', data: data);
+}
+  //Medicine Reminder CREATE
+ Future<Response> createMedicineReminder(Map<String, dynamic> data) async {
+    return await _dio.post('/api/medicinereminders', data: data);
+  }
+
+  // ✅ Medicine Reminder GET (User- reminders)
+  Future<Response> getUserMedicineReminders(String userId) async {
+    return await _dio.get('/api/medicinereminders/user/$userId');
+  }
 
 
 Future<Response> getAllCarousel({
@@ -241,8 +259,6 @@ Future<Response> updateDonor(String id, Map<String, dynamic> data) async {
     return await _dio.get('/api/speciality');
   }
 
-
-
   // GET Ambulances
   Future<Response> getAllAmbulances() async {
     return await _dio.get('/api/ambulance');
@@ -316,7 +332,16 @@ Future<Response> getDoctorsByHospital(String hospitalId) async {
   );
 }
 
+// In api_service.dart
 
+Future<Response> getDoctorById(String doctorId) async {
+  print("🔵 GET Doctor by ID API Call");
+  print("🔵 URL: /api/doctor/$doctorId");
+  
+  return await _dio.get(
+    '/api/doctor/$doctorId',
+  );
+}
   // UPDATE booking
   Future<Response> getFilter(String filter) async {
     return await _dio.get('/api/hospital/filter/$filter');
