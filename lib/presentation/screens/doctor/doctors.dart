@@ -10,7 +10,7 @@ import '../../../services/api_service.dart';
 class Doctors extends StatefulWidget {
   final String hospitalId;
   final String specialty;
-  
+
   const Doctors({super.key, required this.hospitalId, required this.specialty});
 
   @override
@@ -28,94 +28,38 @@ class _DoctorsState extends State<Doctors> {
     super.initState();
     _fetchDoctors();
   }
- @override
+
+  @override
   void dispose() {
     // Clean up any resources if needed
     super.dispose();
   }
 
-// Future<void> _fetchDoctors() async {
-//   try {
-//     setState(() {
-//       isLoading = true;
-//       errorMessage = null;
-//     });
-    
-//     final response = await ApiService().getDoctors(
-//       id: widget.hospitalId,
-//       specialty: widget.specialty,
-//     );
-
-//     // ✅ CHECK: Screen still mounted before setState
-//     if (!mounted) return;
-    
-//     print("📡 API Response: ${response.data}");
-    
-//     if (response.data['success'] == true && response.data['data'] != null) {
-//       final doctorsData = response.data['data'];
-      
-//       if (doctorsData is List) {
-//         // ✅ CHECK again before setState
-//         if (mounted) {
-//           setState(() {
-//             doctors = doctorsData
-//                 .map((doctorJson) => Doctor.fromJson(doctorJson))
-//                 .toList();
-//             isLoading = false;
-//           });
-//         }
-//         print("✅ Loaded ${doctors.length} doctors");
-//       } else {
-//         if (mounted) {
-//           setState(() {
-//             errorMessage = 'Invalid data format';
-//             isLoading = false;
-//           });
-//         }
-//       }
-//     } else {
-//       if (mounted) {
-//         setState(() {
-//           errorMessage = response.data['message'] ?? 'Failed to load doctors';
-//           isLoading = false;
-//         });
-//       }
-//     }
-//   } catch (e) {
-//     print("❌ Error: $e");
-//     if (mounted) {
-//       setState(() {
-//         errorMessage = 'Error loading doctors: $e';
-//         isLoading = false;
-//       });
-//     }
-//   }
-// }
   Future<void> _fetchDoctors() async {
     // Add mounted check
     if (!mounted) return;
-    
+
     try {
       print("🔵 Calling API with ID: ${widget.hospitalId}");
       print("🔵 Specialty: ${widget.specialty}");
-      
+
       setState(() {
         isLoading = true;
         errorMessage = null;
       });
-      
+
       final response = await ApiService().getDoctors(
-        id: widget.hospitalId,
-        specialty: widget.specialty,
+        hospitalId: widget.hospitalId,
+        speciality: widget.specialty,
       );
 
       if (!mounted) return;
-      
+
       print("📡 API Response: ${response.data}");
-      
+
       if (response.data['success'] == true && response.data['data'] != null) {
         final doctorsData = response.data['data'];
-        
+
         if (doctorsData is List) {
           if (mounted) {
             setState(() {
@@ -155,13 +99,13 @@ class _DoctorsState extends State<Doctors> {
 
   List<Doctor> get filteredDoctors {
     if (searchQuery.isEmpty) return doctors;
-    
+
     return doctors.where((doctor) {
       final name = doctor.name.toLowerCase();
       final specialty = doctor.specialty.toLowerCase();
-       final hospitalName = doctor.hospitalName?.toLowerCase() ?? '';
-   //   final department = doctor.department.toLowerCase();
-      
+      final hospitalName = doctor.hospitalName?.toLowerCase() ?? '';
+      //   final department = doctor.department.toLowerCase();
+
       return name.contains(searchQuery.toLowerCase()) ||
           specialty.contains(searchQuery.toLowerCase()) ||
           hospitalName.contains(searchQuery.toLowerCase());
@@ -232,94 +176,138 @@ class _DoctorsState extends State<Doctors> {
       ),
     );
   }
+Widget _buildContent() {
+  if (isLoading) return const Center(child: CircularProgressIndicator(color: Colors.green));
+  if (errorMessage != null) { /* error UI */ }
 
-  Widget _buildContent() {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.green));
-    }
-
-    if (errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 60, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              errorMessage!,
-              style: TextStyle(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _fetchDoctors,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('Try Again', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (filteredDoctors.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.medical_information, size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 20),
-            Text(
-              'No doctors found',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Try adjusting your search',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 0.75,
-        ),
-        itemCount: filteredDoctors.length,
-        itemBuilder: (context, index) {
-          final doctor = filteredDoctors[index];
-          return _buildDoctorCard(doctor);
-        },
+  // 🔥 No doctors for this specialty at all (API returned empty list)
+  if (doctors.isEmpty && searchQuery.isEmpty) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.medical_services, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 20),
+          Text('No specialty found',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+          const SizedBox(height: 8),
+          Text('This hospital does not have ${widget.specialty} doctors.',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+        ],
       ),
     );
   }
 
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.75,
+      ),
+      itemCount: filteredDoctors.length,
+      itemBuilder: (context, index) => _buildDoctorCard(filteredDoctors[index]),
+    ),
+  );
+}
+
+  // Widget _buildContent() {
+  //   if (isLoading) {
+  //     return const Center(
+  //       child: CircularProgressIndicator(color: Colors.green),
+  //     );
+  //   }
+
+  //   if (errorMessage != null) {
+  //     return Center(
+  //       child: Column(
+  //         mainAxisAlignment: MainAxisAlignment.center,
+  //         children: [
+  //           Icon(Icons.error_outline, size: 60, color: Colors.grey[400]),
+  //           const SizedBox(height: 16),
+  //           Text(
+  //             errorMessage!,
+  //             style: TextStyle(color: Colors.grey[600]),
+  //             textAlign: TextAlign.center,
+  //           ),
+  //           const SizedBox(height: 20),
+  //           ElevatedButton(
+  //             onPressed: _fetchDoctors,
+  //             style: ElevatedButton.styleFrom(
+  //               backgroundColor: Colors.green,
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(10),
+  //               ),
+  //             ),
+  //             child: const Text(
+  //               'Try Again',
+  //               style: TextStyle(color: Colors.white),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   }
+
+  //   if (filteredDoctors.isEmpty) {
+  //     return Center(
+  //       child: Column(
+  //         mainAxisAlignment: MainAxisAlignment.center,
+  //         children: [
+  //           Icon(Icons.medical_information, size: 80, color: Colors.grey[300]),
+  //           const SizedBox(height: 20),
+  //           Text(
+  //             'No doctors found',
+  //             style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+  //           ),
+  //           const SizedBox(height: 8),
+  //           Text(
+  //             'Try adjusting your search',
+  //             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   }
+
+  //   return Padding(
+  //     padding: const EdgeInsets.all(16),
+  //     child: GridView.builder(
+  //       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  //         crossAxisCount: 2,
+  //         mainAxisSpacing: 16,
+  //         crossAxisSpacing: 16,
+  //         childAspectRatio: 0.75,
+  //       ),
+  //       itemCount: filteredDoctors.length,
+  //       itemBuilder: (context, index) {
+  //         final doctor = filteredDoctors[index];
+  //         return _buildDoctorCard(doctor);
+  //       },
+  //     ),
+  //   );
+  // }
+
   Widget _buildDoctorCard(Doctor doctor) {
-    String firstLetter = doctor.displayName.isNotEmpty 
-        ? doctor.displayName[0].toUpperCase() 
-        : doctor.firstName.isNotEmpty 
-            ? doctor.firstName[0].toUpperCase() 
-            : 'D';
-    
+    String firstLetter = doctor.displayName.isNotEmpty
+        ? doctor.displayName[0].toUpperCase()
+        : doctor.firstName.isNotEmpty
+        ? doctor.firstName[0].toUpperCase()
+        : 'D';
+
     // Get consultation info
     String consultationInfo = "";
     if (doctor.outDoorConsulting != null) {
       consultationInfo = "🏥 ${doctor.outDoorConsulting!.place}";
-    } else if (doctor.consulting.morningSession != null || doctor.consulting.eveningSession != null) {
+    } else if (doctor.consulting.morningSession != null ||
+        doctor.consulting.eveningSession != null) {
       consultationInfo = "⏰ Available Today";
     } else {
       consultationInfo = "Consultation Available";
     }
-    
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -398,7 +386,7 @@ class _DoctorsState extends State<Doctors> {
                 ],
               ),
             ),
-            
+
             // Qualification
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -409,13 +397,17 @@ class _DoctorsState extends State<Doctors> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            
+
             // Fees
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               child: Row(
                 children: [
-                  const Icon(Icons.currency_rupee, size: 12, color: Colors.grey),
+                  const Icon(
+                    Icons.currency_rupee,
+                    size: 12,
+                    color: Colors.grey,
+                  ),
                   const SizedBox(width: 2),
                   Text(
                     doctor.fees,
@@ -425,15 +417,21 @@ class _DoctorsState extends State<Doctors> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Text(" fee", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                  const Text(
+                    " fee",
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
                 ],
               ),
             ),
-            
+
             // Consultation info
             if (consultationInfo.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 2,
+                ),
                 child: Text(
                   consultationInfo,
                   style: TextStyle(fontSize: 9, color: Colors.grey[500]),
@@ -441,9 +439,9 @@ class _DoctorsState extends State<Doctors> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-            
+
             const Spacer(),
-            
+
             // Book Button
             Container(
               width: double.infinity,
@@ -453,7 +451,9 @@ class _DoctorsState extends State<Doctors> {
                     ? () => _showBookingSheet(doctor)
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: doctor.bookingOpen ? Colors.green : Colors.grey,
+                  backgroundColor: doctor.bookingOpen
+                      ? Colors.green
+                      : Colors.grey,
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -477,7 +477,11 @@ class _DoctorsState extends State<Doctors> {
 
   void _showBookingSheet(Doctor doctor) {
     if (!doctor.bookingOpen) {
-      showTopSnackBar(context, 'Booking is currently closed for Dr. ${doctor.name}', isError: true);
+      showTopSnackBar(
+        context,
+        'Booking is currently closed for Dr. ${doctor.name}',
+        isError: true,
+      );
       return;
     }
 
@@ -486,10 +490,7 @@ class _DoctorsState extends State<Doctors> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return BookingForm(
-          doctor: doctor,
-          onBooking: _handleBooking,
-        );
+        return BookingForm(doctor: doctor, onBooking: _handleBooking);
       },
     );
   }
@@ -511,9 +512,16 @@ class _DoctorsState extends State<Doctors> {
       return;
     }
 
-    if (patientName.isEmpty || patientPhone.isEmpty || patientPlace.isEmpty ||
-        patientDob == null || appointmentDate == null) {
-      showTopSnackBar(context, 'Please fill all required fields', isError: true);
+    if (patientName.isEmpty ||
+        patientPhone.isEmpty ||
+        patientPlace.isEmpty ||
+        patientDob == null ||
+        appointmentDate == null) {
+      showTopSnackBar(
+        context,
+        'Please fill all required fields',
+        isError: true,
+      );
       return;
     }
 
@@ -535,11 +543,20 @@ class _DoctorsState extends State<Doctors> {
         bookingData,
       );
 
-      if (response.statusCode == 201 || response.data['status'] == 201 || response.data['success'] == true) {
-        showTopSnackBar(context, 'Appointment booked successfully with Dr. ${doctor.name}!');
+      if (response.statusCode == 201 ||
+          response.data['status'] == 201 ||
+          response.data['success'] == true) {
+        showTopSnackBar(
+          context,
+          'Appointment booked successfully with Dr. ${doctor.name}!',
+        );
         Navigator.pop(context); // Close booking form
       } else {
-        showTopSnackBar(context, response.data['message'] ?? 'Booking failed', isError: true);
+        showTopSnackBar(
+          context,
+          response.data['message'] ?? 'Booking failed',
+          isError: true,
+        );
       }
     } on DioException catch (dioError) {
       String errorMessage = "Something went wrong";
@@ -559,8 +576,13 @@ class _DoctorsState extends State<Doctors> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Sign In Required', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Please sign in to book appointments and access all features.'),
+        title: const Text(
+          'Sign In Required',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Please sign in to book appointments and access all features.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -569,11 +591,16 @@ class _DoctorsState extends State<Doctors> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const Signin()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const Signin()),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Sign In', style: TextStyle(color: Colors.white)),
           ),
@@ -594,7 +621,8 @@ class BookingForm extends StatefulWidget {
     String patientPlace,
     DateTime? patientDob,
     DateTime? appointmentDate,
-  ) onBooking;
+  )
+  onBooking;
 
   const BookingForm({super.key, required this.doctor, required this.onBooking});
 
@@ -614,7 +642,9 @@ class _BookingFormState extends State<BookingForm> {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate: isPastOnly ? (dob ?? DateTime(2000)) : (appointmentDate ?? now),
+      initialDate: isPastOnly
+          ? (dob ?? DateTime(2000))
+          : (appointmentDate ?? now),
       firstDate: isPastOnly ? DateTime(1900) : now,
       lastDate: isPastOnly ? now : now.add(const Duration(days: 365)),
       builder: (context, child) {
@@ -642,9 +672,9 @@ class _BookingFormState extends State<BookingForm> {
 
   Future<void> _handleBooking() async {
     if (_isSubmitting) return;
-    
+
     setState(() => _isSubmitting = true);
-    
+
     try {
       await widget.onBooking(
         context,
@@ -690,7 +720,9 @@ class _BookingFormState extends State<BookingForm> {
                 CircleAvatar(
                   backgroundColor: Colors.green,
                   child: Text(
-                    widget.doctor.name.isNotEmpty ? widget.doctor.name[0].toUpperCase() : 'D',
+                    widget.doctor.name.isNotEmpty
+                        ? widget.doctor.name[0].toUpperCase()
+                        : 'D',
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
@@ -701,7 +733,10 @@ class _BookingFormState extends State<BookingForm> {
                     children: [
                       const Text(
                         'Book Appointment',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         'Dr. ${widget.doctor.name}',
@@ -717,7 +752,7 @@ class _BookingFormState extends State<BookingForm> {
               ],
             ),
           ),
-          
+
           // Form Fields
           Expanded(
             child: SingleChildScrollView(
@@ -754,9 +789,11 @@ class _BookingFormState extends State<BookingForm> {
                     value: appointmentDate,
                     onTap: () => _selectDate(context, false),
                   ),
-                  
+
                   // Show available timings if available
-                  if (widget.doctor.consulting.getAvailableSlots().isNotEmpty) ...[
+                  if (widget.doctor.consulting
+                      .getAvailableSlots()
+                      .isNotEmpty) ...[
                     const SizedBox(height: 20),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -772,10 +809,12 @@ class _BookingFormState extends State<BookingForm> {
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
-                          ...widget.doctor.consulting.getAvailableSlots().map((slot) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text('• ${slot.title}: ${slot.time}'),
-                          )),
+                          ...widget.doctor.consulting.getAvailableSlots().map(
+                            (slot) => Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text('• ${slot.title}: ${slot.time}'),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -784,7 +823,7 @@ class _BookingFormState extends State<BookingForm> {
               ),
             ),
           ),
-          
+
           // Submit Button
           Container(
             padding: const EdgeInsets.all(20),
@@ -836,9 +875,7 @@ class _BookingFormState extends State<BookingForm> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.green),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.green),
@@ -858,9 +895,7 @@ class _BookingFormState extends State<BookingForm> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(Icons.calendar_today, color: Colors.green),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

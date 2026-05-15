@@ -1,17 +1,59 @@
 import 'dart:developer';
-
 import 'package:dio/dio.dart';
-// import 'package:hosta/data/specialty_data.dart';
 import 'dart:io';
-
 import 'package:dio_smart_retry/dio_smart_retry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ApiService {
-  late final Dio _dio;   // ✅ change from final Dio _dio = ... to late final
+     class ApiService {
+         late final Dio _dio;   
 
   // ✅ Add constructor
   ApiService() {
     _dio = Dio(BaseOptions(baseUrl: "https://zorrowtek.in"));
+      _dio.interceptors.add(InterceptorsWrapper(
+    onRequest: (options, handler) async {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('authToken');
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+        print("✅ Token added to request");
+      }
+      handler.next(options);
+    },
+    onError: (error, handler) async {
+      if (error.response?.statusCode == 401) {
+        print("🔄 401 detected - refreshing token...");
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final refreshToken = prefs.getString('refreshToken');
+          if (refreshToken == null) throw Exception("No refresh token");
+
+          // Call refresh API
+          final response = await refreshUserToken({'refreshToken': refreshToken});
+          if (response.statusCode == 200 && response.data['success'] == true) {
+            final newToken = response.data['accessToken']; // adjust key
+            await prefs.setString('authToken', newToken);
+            
+            // Retry original request with new token
+            error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+            final retryResponse = await _dio.fetch(error.requestOptions);
+            return handler.resolve(retryResponse);
+          } else {
+            throw Exception("Refresh failed");
+          }
+        } catch (e) {
+          // Refresh failed -> logout
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('authToken');
+          await prefs.remove('refreshToken');
+          await prefs.remove('userId');
+          print("❌ Refresh failed. Please login again.");
+          return handler.next(error);
+        }
+      }
+      handler.next(error);
+    },
+  ));
     
     // ✅ Add retry interceptor
     _dio.interceptors.add(RetryInterceptor(
@@ -103,9 +145,9 @@ Future<Response> getAllCarousel({
   }
 
 
-    Future<Response> getAllHospitalsSpeciality(String search) async {
-    return await _dio.get('/api/hospital/filter/$search');
-  }
+  //   Future<Response> getAllHospitalsSpeciality(String search) async {
+  //   return await _dio.get('/api/hospital/filter/$search');
+  // }
 
 
 
@@ -169,22 +211,6 @@ Future<Response> updateDonor(String id, Map<String, dynamic> data) async {
       , data: data);
   }
 
-  // OTP
-  // SEND OTP
-// Future<Response> sendOtp(Map<String, dynamic> data) async {
-//   return await _dio.post(
-//     '/users/auth/send-otp',
-//     data: data,
-//   );
-// }
-
-// // VERIFY OTP
-// Future<Response> verifyOtp(Map<String, dynamic> data) async {
-//   return await _dio.post(
-//     '/users/auth/verify-otp',
-//     data: data,
-//   );
-// }
   Future<Response> otpUser(Map<String, dynamic> data) async {
     return await _dio.post(
       '/api/users/otp'
@@ -215,9 +241,9 @@ Future<Response> updateDonor(String id, Map<String, dynamic> data) async {
   }
 
   // Update user
-  // Future<Response> updateUser(String id, Map<String, dynamic> data) async {
-  //   return await _dio.put('/api/users/$id', data: data);
-  // }
+  Future<Response> updateUser(String id, Map<String, dynamic> data) async {
+    return await _dio.put('/api/users/$id', data: data);
+  }
 
    Future<Response> updateUserWithImage(String id, Map<String, dynamic> data, File? imageFile) async {
     try {
@@ -299,7 +325,7 @@ Future<Response> editAmbulance(String id, Map<String, dynamic> updatedData) asyn
 
   // GET bookings
   Future<Response> getAllBookings(String id) async {
-    return await _dio.get('/api/booking/id');
+    return await _dio.get('/api/booking/$id');
   }
 
   // UPDATE booking
@@ -315,21 +341,35 @@ Future<Response> editAmbulance(String id, Map<String, dynamic> updatedData) asyn
 
 
 
- Future<Response> getDoctors({required String id, required String specialty}) async {
-  return await _dio.get(
-    '/api/doctor',
-    queryParameters: {
-      'id': id,
-      'speciality': specialty,
-    },
-  );
-}
-// GET all doctors for a specific hospital (no specialty filter)
-Future<Response> getDoctorsByHospital(String hospitalId) async {
-  return await _dio.get(
-    '/api/doctor',
-    queryParameters: {'hospitalId': hospitalId},
-  );
+/// Get doctors with optional filters
+// Future<Response> getDoctors({
+
+//   String? hospitalId,
+//   String? speciality,  
+//   String? id,
+// }) async {
+//   final queryParams = <String, dynamic>{};
+//   if (hospitalId != null) queryParams['id'] = hospitalId;
+//   if (speciality != null) queryParams['speciality'] = speciality; 
+//    // ✅ key: 'speciality'
+//   if (id != null) queryParams['id'] = id;
+//   log("$id");
+//    log("$hospitalId");
+//    log("$queryParams");
+//   return await _dio.get('/api/doctor', queryParameters: queryParams);
+ 
+    
+// }
+Future<Response> getDoctors({
+  String? hospitalId,
+  String? speciality,
+   // String? id,
+}) async {
+  final queryParams = <String, dynamic>{};
+  if (hospitalId != null) queryParams['hospitalId'] = hospitalId;
+  if (speciality != null) queryParams['speciality'] = speciality;
+  log("Calling /api/doctor with params: $queryParams");
+  return await _dio.get('/api/doctor', queryParameters: queryParams);
 }
 
 // In api_service.dart

@@ -347,8 +347,8 @@ class DoctorsNotifier extends StateNotifier<DoctorsState> {
       print("🟡 Fetching doctors for hospital: $hospitalId, specialty: $specialty");
       
       final response = await _apiService.getDoctors(
-        id: hospitalId,
-        specialty: specialty,
+        hospitalId: hospitalId,
+       speciality: specialty,
       );
       
       print("🟢 Response status: ${response.statusCode}");

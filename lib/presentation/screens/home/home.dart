@@ -389,7 +389,7 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     // Use the stored reference, NOT ref.read()
     //_homeNotifier.dispose();
-     ref.read(homeProvider.notifier).dispose();
+     //ref.read(homeProvider.notifier).dispose();
     super.dispose();
   }
 

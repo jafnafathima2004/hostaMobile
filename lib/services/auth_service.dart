@@ -1,5 +1,3 @@
-
-
 import 'package:hosta/services/api_service.dart';
 
 class AuthService {
@@ -11,7 +9,7 @@ class AuthService {
       final response = await _apiService.refreshUserToken({
         'refreshToken': refreshToken,
       });
-
+         
       if (response.statusCode == 200) {
         // Backend-
         String newAccessToken = response.data['accessToken'];
