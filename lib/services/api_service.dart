@@ -1,10 +1,9 @@
 import 'dart:developer';
-
 import 'package:dio/dio.dart';
 // import 'package:hosta/data/specialty_data.dart';
 import 'dart:io';
-
 import 'package:dio_smart_retry/dio_smart_retry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   late final Dio _dio;   // ✅ change from final Dio _dio = ... to late final
@@ -13,6 +12,31 @@ class ApiService {
   ApiService() {
     _dio = Dio(BaseOptions(baseUrl: "https://zorrowtek.in"));
     
+      
+    // ✅ Add auth interceptor
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('token');
+        
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+          print('🔐 Auth token added to request');
+        } else {
+          print('🔐 No auth token found');
+        }
+        
+        print('📡 ${options.method} ${options.path}');
+        return handler.next(options);
+      },
+      onError: (error, handler) async {
+        if (error.response?.statusCode == 401) {
+          print('🔐 Token expired or invalid');
+          // Optionally refresh token here
+        }
+        return handler.next(error);
+      },
+    ));
     // ✅ Add retry interceptor
     _dio.interceptors.add(RetryInterceptor(
       dio: _dio,
@@ -297,20 +321,24 @@ Future<Response> editAmbulance(String id, Map<String, dynamic> updatedData) asyn
     return await _dio.patch('/api/notifications/user/$id');
   }
 
+
   // GET bookings
   Future<Response> getAllBookings(String id) async {
-    return await _dio.get('/api/booking/id');
+     print('📡 Getting bookings for user: $id');
+    return await _dio.get('/api/booking');
   }
 
-  // UPDATE booking
+  //create booking
   Future<Response> createBooking(String id, Map<String, dynamic> data) async {
-    return await _dio.post('/api/bookings/$id', data: data);
+    print('📡 Creating booking for user: $id');
+    return await _dio.post('/api/booking', data: data);
   }
 
 
   // UPDATE booking
   Future<Response> updateBooking(String bookingId, String hospitalId, Map<String, dynamic> data) async {
-    return await _dio.put('/api/bookings/$bookingId/hospital/$hospitalId', data: data);
+    print('📡 Updating booking: $bookingId for hospital: $hospitalId');
+    return await _dio.put('/api/booking/$bookingId/hospital/$hospitalId', data: data);
   }
 
 
