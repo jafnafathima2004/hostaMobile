@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:hosta/firebase_msg.dart';
@@ -138,8 +136,7 @@ class _PasswordManagerPageState extends State<PasswordManagerPage> {
         "newPassword": _newPasswordController.text,
       };
 
-      final response = await _apiService.changePassword(passwordData);
-      log("$response");
+      final response = await _apiService.sendResetPasswrord(passwordData);
 
       setState(() => _isLoading = false);
 
