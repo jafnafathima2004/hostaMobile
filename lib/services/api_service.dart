@@ -9,17 +9,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 
   // ✅ Add constructor
   ApiService() {
-    _dio = Dio(BaseOptions(baseUrl: "https://zorrowtek.in"));
-      _dio.interceptors.add(InterceptorsWrapper(
-    onRequest: (options, handler) async {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('authToken');
-      if (token != null && token.isNotEmpty) {
-        options.headers['Authorization'] = 'Bearer $token';
-        print("✅ Token added to request");
-      }
-      handler.next(options);
-    },
+    _dio = Dio(BaseOptions(baseUrl: "https://zorrowtek.in",
+     connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+        headers: {
+        'Content-Type': 'application/json',
+      },
+      ));
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('authToken');
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        print('📡 Request: ${options.method} ${options.path}');
+        return handler.next(options);
+      },
+      onResponse: (response, handler) {
+        print('✅ Response: ${response.statusCode}');
+        return handler.next(response);
+      },
+
     onError: (error, handler) async {
       if (error.response?.statusCode == 401) {
         print("🔄 401 detected - refreshing token...");
@@ -55,6 +66,62 @@ import 'package:shared_preferences/shared_preferences.dart';
     },
   ));
     
+      
+    // ✅ Add auth interceptor
+    // _dio.interceptors.add(InterceptorsWrapper(
+    //   onRequest: (options, handler) async {
+    //     try {
+    //       final prefs = await SharedPreferences.getInstance();
+    //       final token = prefs.getString('authToken');  // ← Key should be 'token'
+          
+    //       print('🔐 Auth Interceptor - Token: ${token != null ? "Exists" : "NULL"}');
+          
+    //       if (token != null && token.isNotEmpty) {
+    //         options.headers['Authorization'] = 'Bearer $token';
+    //         print('✅ Token added to request: ${options.path}');
+    //       } else {
+    //         print('❌ No token found for: ${options.path}');
+    //       }
+    //     } catch (e) {
+    //       print('❌ Error getting token: $e');
+    //     }
+    //     return handler.next(options);
+    //   },
+    //   onResponse: (response, handler) {
+    //     print('✅ Response: ${response.statusCode} - ${response.requestOptions.path}');
+    //     return handler.next(response);
+    //   },
+    //   onError: (error, handler) {
+    //     print('❌ Error: ${error.response?.statusCode} - ${error.requestOptions.path}');
+    //     if (error.response?.data != null) {
+    //       print('❌ Data: ${error.response?.data}');
+    //     }
+    //     return handler.next(error);
+    //   },
+    // ));
+    // _dio.interceptors.add(InterceptorsWrapper(
+    //   onRequest: (options, handler) async {
+    //     final prefs = await SharedPreferences.getInstance();
+    //     final token = prefs.getString('token');
+        
+    //     if (token != null && token.isNotEmpty) {
+    //       options.headers['Authorization'] = 'Bearer $token';
+    //       print('🔐 Auth token added to request');
+    //     } else {
+    //       print('🔐 No auth token found');
+    //     }
+        
+    //     print('📡 ${options.method} ${options.path}');
+    //     return handler.next(options);
+    //   },
+    //   onError: (error, handler) async {
+    //     if (error.response?.statusCode == 401) {
+    //       print('🔐 Token expired or invalid');
+    //       // Optionally refresh token here
+    //     }
+    //     return handler.next(error);
+    //   },
+    // ));
     // ✅ Add retry interceptor
     _dio.interceptors.add(RetryInterceptor(
       dio: _dio,
@@ -64,7 +131,7 @@ import 'package:shared_preferences/shared_preferences.dart';
         Duration(seconds: 2),
         Duration(seconds: 3),
       ],
-      retryableExtraStatuses: {429},
+    //  retryableExtraStatuses: {429},
     ));
   }
 //  final Dio _dio = Dio(BaseOptions(baseUrl: 'https://zorrowtek.in',
@@ -323,20 +390,41 @@ Future<Response> editAmbulance(String id, Map<String, dynamic> updatedData) asyn
     return await _dio.patch('/api/notifications/user/$id');
   }
 
-  // GET bookings
+
+  //create booking
+  // Future<Response> createBooking(Map<String, dynamic> userId, Map<String, dynamic> data) async {
+  //   print('📡 Creating booking for user: $userId');
+  //   return await _dio.post('/api/booking', data: data);
+  // }
+// Future<Response> createBooking(String hospitalId,Map<String, dynamic> bookingData) async {
+//   return await _dio.post(
+//     '/booking/$hospitalId',
+//     data: bookingData,
+//   );
+// }
+
+  Future<Response> createBooking(Map<String, dynamic> bookingData) async {
+      print('📡 POST /api/booking');
+    print('📡 Data: $bookingData');
+     try {
+      final response = await _dio.post('/api/booking', data: bookingData);
+      return response;
+    } catch (e) {
+      print('❌ Booking error: $e');
+      rethrow;
+    }
+    }
+
+// GET bookings
   Future<Response> getAllBookings(String id) async {
+    print('📡 GET /api/booking/$id');
     return await _dio.get('/api/booking/$id');
   }
 
   // UPDATE booking
-  Future<Response> createBooking(String id, Map<String, dynamic> data) async {
-    return await _dio.post('/api/bookings/$id', data: data);
-  }
-
-
-  // UPDATE booking
   Future<Response> updateBooking(String bookingId, String hospitalId, Map<String, dynamic> data) async {
-    return await _dio.put('/api/bookings/$bookingId/hospital/$hospitalId', data: data);
+    print('📡 Updating booking: $bookingId for hospital: $hospitalId');
+    return await _dio.put('/api/booking/$bookingId/hospital/$hospitalId', data: data);
   }
 
 

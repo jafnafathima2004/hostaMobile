@@ -489,7 +489,7 @@ Widget _buildContent() {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
+      builder: (context) {   
         return BookingForm(doctor: doctor, onBooking: _handleBooking);
       },
     );
@@ -503,14 +503,15 @@ Widget _buildContent() {
     String patientPlace,
     DateTime? patientDob,
     DateTime? appointmentDate,
+    String? selectedTimeSlot,
   ) async {
     final prefs = await SharedPreferences.getInstance();
     final storedUserId = prefs.getString('userId');
-
-    if (storedUserId == null) {
-      _showLoginDialog(context);
-      return;
-    }
+  
+   if (storedUserId == null || storedUserId.isEmpty) {
+    _showLoginDialog(context);
+    return;
+  }
 
     if (patientName.isEmpty ||
         patientPhone.isEmpty ||
@@ -524,52 +525,111 @@ Widget _buildContent() {
       );
       return;
     }
-
-    final bookingData = {
-      'userId': storedUserId,
-      'specialty': doctor.specialty,
-      'doctor_id': doctor.id.toString(),
-      'doctor_name': doctor.name,
-      'booking_date': appointmentDate.toIso8601String(),
-      'patient_name': patientName,
-      'patient_phone': patientPhone,
-      'patient_place': patientPlace,
-      'patient_dob': patientDob.toIso8601String(),
-    };
-
-    try {
-      final response = await ApiService().createBooking(
-        doctor.hospitalId.toString(),
-        bookingData,
-      );
-
-      if (response.statusCode == 201 ||
-          response.data['status'] == 201 ||
-          response.data['success'] == true) {
-        showTopSnackBar(
-          context,
-          'Appointment booked successfully with Dr. ${doctor.name}!',
-        );
-        Navigator.pop(context); // Close booking form
-      } else {
-        showTopSnackBar(
-          context,
-          response.data['message'] ?? 'Booking failed',
-          isError: true,
-        );
-      }
-    } on DioException catch (dioError) {
-      String errorMessage = "Something went wrong";
-      if (dioError.response != null) {
-        try {
-          errorMessage = dioError.response?.data['message'] ?? errorMessage;
-        } catch (_) {}
-      }
-      showTopSnackBar(context, errorMessage, isError: true);
-    } catch (e) {
-      showTopSnackBar(context, 'Error: $e', isError: true);
-    }
+ String formatDate(DateTime date) {
+    return "${date.day}/${date.month}/${date.year}";
   }
+
+
+   final bookingData = {
+    'userId': int.parse(storedUserId),  // Send as integer
+    'patient_dob': formatDate(patientDob),  // DD/MM/YYYY format
+    'patient_name': patientName,
+    'patient_place': patientPlace,
+    'patient_phone': patientPhone,
+    'hospitalId': int.parse(doctor.hospitalId.toString()),  // Send as integer
+    'doctorId': int.parse(doctor.id.toString()),  // Send as integer
+    'booking_date': formatDate(appointmentDate),  // DD/MM/YYYY format
+    'department': doctor.specialty,  // Add department field
+    'displayName': doctor.name,  // Use displayName instead of doctorName
+  };
+ 
+print("BOOKING DATA = $bookingData");
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(child: CircularProgressIndicator(color: Colors.green),
+    ),
+  );
+     try {
+    final apiService = ApiService();
+    final response = await apiService.createBooking(bookingData);
+    
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context); // Close loading
+    }
+    
+    print("✅ Response: ${response.statusCode}");
+    print("✅ Data: ${response.data}");
+
+      
+    if (response.statusCode == 201 || response.data['success'] == true) {
+      showTopSnackBar(
+        context,
+        '✅ Booking successful! Appointment confirmed with Dr. ${doctor.name}',
+      );
+      Navigator.pop(context); // Close booking form
+    } else {
+      showTopSnackBar(
+        context,
+        response.data['message'] ?? 'Booking failed',
+        isError: true,
+      );
+    }
+     
+    //  } on DioException catch (e) {
+    //   if (Navigator.canPop(context)) {
+    //   Navigator.pop(context);
+    // }
+    // String errorMessage = "Failed to book appointment. Please try again.";
+    // if (e.response != null) {
+    //   print("❌ Dio Error Response: ${e.response?.data}");
+    //    if (e.response?.data is Map) {
+    //     errorMessage = e.response?.data['message'] ?? 
+    //                   e.response?.data['error'] ?? 
+    //                   'Server error occurred';
+    //   } else if (e.response?.data is String) {
+    //     errorMessage = e.response?.data;
+    //   }
+    // } else if (e.type == DioExceptionType.connectionTimeout) {
+    //   errorMessage = "Connection timeout. Please check your internet.";
+    // } else if (e.type == DioExceptionType.connectionError) {
+    //   errorMessage = "No internet connection. Please try again.";
+    // }
+    } on DioException catch (e) {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+    
+    String errorMsg = "Booking failed";
+    if (e.response?.data is Map) {
+      errorMsg = e.response?.data['message'] ?? errorMsg;
+       print("❌ Server error details: ${e.response?.data}");
+    }
+      showTopSnackBar(context, errorMsg, isError: true);
+
+  } catch (e) {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+    print("❌ Unexpected error: $e");
+    showTopSnackBar(context, 'Error: $e', isError: true);
+  }
+}
+      
+//     showTopSnackBar(context, errorMessage, isError: true);
+//   } catch (e) {
+//       if (Navigator.canPop(context)) {
+//         Navigator.pop(context);
+//       }
+//        print("❌ Unexpected error: $e");
+//  showTopSnackBar(
+//       context,
+//       'An unexpected error occurred. Please try again.',
+//       isError: true,
+//     );
+//   }
+//   }
+
 
   void _showLoginDialog(BuildContext context) {
     showDialog(
@@ -621,6 +681,7 @@ class BookingForm extends StatefulWidget {
     String patientPlace,
     DateTime? patientDob,
     DateTime? appointmentDate,
+    String? selectedTimeSlot,
   )
   onBooking;
 
@@ -636,7 +697,30 @@ class _BookingFormState extends State<BookingForm> {
   final TextEditingController placeController = TextEditingController();
   DateTime? dob;
   DateTime? appointmentDate;
+  String? selectedTimeSlot;
   bool _isSubmitting = false;
+
+  List<String> get availableTimeSlots {
+    List<String> slots = [];
+    if (widget.doctor.consulting.morningSession != null) {
+      slots.add(widget.doctor.consulting.morningSession!.range);
+    }
+    if (widget.doctor.consulting.eveningSession != null) {
+      slots.add(widget.doctor.consulting.eveningSession!.range);
+    }
+    if (widget.doctor.outDoorConsulting != null) {
+      slots.add(widget.doctor.outDoorConsulting!.time.range);
+    }
+    return slots;
+  }
+  @override
+  void initState() {
+    super.initState();
+    if (availableTimeSlots.isNotEmpty) {
+      selectedTimeSlot = availableTimeSlots.first;
+      print("✅ Default time slot set: $selectedTimeSlot");
+    }
+  }
 
   Future<void> _selectDate(BuildContext context, bool isPastOnly) async {
     final now = DateTime.now();
@@ -673,6 +757,15 @@ class _BookingFormState extends State<BookingForm> {
   Future<void> _handleBooking() async {
     if (_isSubmitting) return;
 
+  if (availableTimeSlots.isNotEmpty && selectedTimeSlot == null) {
+      showTopSnackBar(
+        context,
+        'Please select a time slot',
+        isError: true,
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -684,6 +777,7 @@ class _BookingFormState extends State<BookingForm> {
         placeController.text,
         dob,
         appointmentDate,
+        selectedTimeSlot,
       );
     } finally {
       if (mounted) {
@@ -789,7 +883,31 @@ class _BookingFormState extends State<BookingForm> {
                     value: appointmentDate,
                     onTap: () => _selectDate(context, false),
                   ),
-
+ if (availableTimeSlots.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: selectedTimeSlot,
+                      hint: const Text('Select Time Slot'),
+                      decoration: InputDecoration(
+                        labelText: 'Consulting Time',
+                        prefixIcon: const Icon(Icons.access_time, color: Colors.green),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        ),
+                      items: availableTimeSlots.map((slot) {
+                        return DropdownMenuItem(
+                          value: slot,
+                          child: Text(slot),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedTimeSlot = value;
+                        });
+                      },
+                    ),
+                ],
                   // Show available timings if available
                   if (widget.doctor.consulting
                       .getAvailableSlots()

@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart'; // ✅ ADD THIS IMPORT
 import 'package:hosta/common/top_snackbar.dart';
 import 'package:hosta/presentation/screens/doctor/doctors.dart';
 import 'package:hosta/presentation/screens/auth/signin.dart';
@@ -24,49 +25,135 @@ class HospitalDetailsPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<HospitalDetailsPage> createState() => _HospitalDetailsPageState();
+  ConsumerState<HospitalDetailsPage> createState() =>
+      _HospitalDetailsPageState();
 }
 
 class _HospitalDetailsPageState extends ConsumerState<HospitalDetailsPage> {
   late Map<String, dynamic> hospital;
   bool isLoading = true;
 
-@override
-void initState() {
-  super.initState();
-  if (widget.hospitalId == null || widget.hospitalId.isEmpty) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid hospital ID")),
-      );
-      Navigator.pop(context);
-    });
-    return;
+  Position? _currentPosition;
+  bool _isLoadingLocation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.hospitalId == null || widget.hospitalId.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Invalid hospital ID")));
+        Navigator.pop(context);
+      });
+      return;
+    }
+    _initializeData();
+    _getCurrentLocation(); // ✅ ADD THIS LINE - Get user location
   }
-  _initializeData();
-}
+
+  // ✅ ADD THIS ENTIRE METHOD - To get user's current location
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      _isLoadingLocation = true;
+    });
+
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Please enable location services to see your current position",
+              ),
+            ),
+          );
+        }
+        setState(() {
+          _isLoadingLocation = false;
+        });
+        return;
+      }
+
+      // Check and request permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Location permission denied")),
+            );
+          }
+          setState(() {
+            _isLoadingLocation = false;
+          });
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Location permissions are permanently denied. Please enable from settings.",
+              ),
+            ),
+          );
+        }
+        setState(() {
+          _isLoadingLocation = false;
+        });
+        return;
+      }
+
+      // Get current position
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPosition = position;
+          _isLoadingLocation = false;
+        });
+        print(
+          "📍 User location obtained: ${position.latitude}, ${position.longitude}",
+        );
+      }
+    } catch (e) {
+      print("❌ Error getting location: $e");
+      if (mounted) {
+        setState(() {
+          _isLoadingLocation = false;
+        });
+      }
+    }
+  }
 
   Future<void> _initializeData() async {
     await ref.read(userProvider.notifier).initializeUser();
     await _loadInitialData();
   }
 
+  // Rest of your code remains the SAME...
   Future<void> _loadInitialData() async {
     try {
       print("🔄 Loading initial data for hospital ID: ${widget.hospitalId}");
-      
-      // Fetch hospital details and reviews
+
       await ref.read(hospitalDetailsProvider(widget.hospitalId).future);
       await ref.read(hospitalReviewsProvider(widget.hospitalId).future);
-      
-      // Update local hospital data
+
       final hospitalData = ref.read(hospitalDetailsProvider(widget.hospitalId));
       hospitalData.whenData((data) {
         setState(() {
           hospital = data;
         });
       });
-      
+
       setState(() {
         isLoading = false;
       });
@@ -79,7 +166,9 @@ void initState() {
   Future<void> _fetchHospitalDetails() async {
     try {
       print("🏥 Fetching hospital details for ID: ${widget.hospitalId}");
-      final hospitalData = await ref.read(hospitalDetailsProvider(widget.hospitalId).future);
+      final hospitalData = await ref.read(
+        hospitalDetailsProvider(widget.hospitalId).future,
+      );
       setState(() {
         hospital = hospitalData;
       });
@@ -89,13 +178,16 @@ void initState() {
     }
   }
 
-  Future<void> _createReview({required double rating, required String comment}) async {
+  Future<void> _createReview({
+    required double rating,
+    required String comment,
+  }) async {
     final userState = ref.read(userProvider);
-    
+
     if (userState.userId == null) return;
 
     final reviewOps = ref.read(reviewOperationsProvider);
-    
+
     await reviewOps.createReview(
       hospitalId: widget.hospitalId,
       rating: rating,
@@ -108,16 +200,20 @@ void initState() {
         _fetchHospitalReviews();
       },
       onError: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
       },
     );
   }
 
-  Future<void> _updateReview(String reviewId, {required double rating, required String comment}) async {
+  Future<void> _updateReview(
+    String reviewId, {
+    required double rating,
+    required String comment,
+  }) async {
     final reviewOps = ref.read(reviewOperationsProvider);
-     
+
     await reviewOps.updateReview(
       reviewId: reviewId,
       hospitalId: widget.hospitalId,
@@ -128,16 +224,16 @@ void initState() {
         _fetchHospitalReviews();
       },
       onError: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
       },
     );
   }
 
   Future<void> _deleteReview(String reviewId) async {
     final reviewOps = ref.read(reviewOperationsProvider);
-    
+
     await reviewOps.deleteReview(
       reviewId: reviewId,
       hospitalId: widget.hospitalId,
@@ -154,7 +250,6 @@ void initState() {
   }
 
   Future<void> _fetchHospitalReviews() async {
-    // Refresh the reviews provider
     ref.invalidate(hospitalReviewsProvider(widget.hospitalId));
   }
 
@@ -167,22 +262,22 @@ void initState() {
 
   Future<bool> _checkAuthentication() async {
     final userState = ref.read(userProvider);
-    
+
     if (userState.userId != null) {
       return true;
     }
-    
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => Signin()),
     );
-    
+
     if (result == true) {
       await ref.read(userProvider.notifier).refreshUser();
       final updatedUserState = ref.read(userProvider);
       return updatedUserState.userId != null;
     }
-    
+
     return false;
   }
 
@@ -200,24 +295,22 @@ void initState() {
     }
   }
 
- void _navigateToDoctorsPage(String hospitalId, String specialtyName) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => Doctors(
-        hospitalId: hospitalId,      // use passed hospitalId
-        specialty: specialtyName,
+  void _navigateToDoctorsPage(String hospitalId, String specialtyName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            Doctors(hospitalId: hospitalId, specialty: specialtyName),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _navigateToLogin() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => Signin()),
     );
-    
+
     if (result == true) {
       await ref.read(userProvider.notifier).refreshUser();
     }
@@ -228,7 +321,7 @@ void initState() {
     final lng = hospital["longitude"]?.toString() ?? "0";
     final name = hospital["name"] ?? "Hospital";
     final address = hospital["address"] ?? "";
-    
+
     if (address.isNotEmpty) {
       return "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent('$name $address')}";
     } else {
@@ -239,22 +332,22 @@ void initState() {
   Future<void> _openMaps() async {
     final mapsUrl = _getGoogleMapsUrl();
     final uri = Uri.parse(mapsUrl);
-    
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open maps")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Could not open maps")));
     }
   }
 
-@override
-Widget build(BuildContext context) {
-  final hospitalAsync = ref.watch(hospitalDetailsProvider(widget.hospitalId));
-  final reviewsAsync = ref.watch(hospitalReviewsProvider(widget.hospitalId));
-  final userState = ref.watch(userProvider);
-  final isReviewLoading = ref.watch(reviewLoadingProvider);  // ✅ add this
+  @override
+  Widget build(BuildContext context) {
+    final hospitalAsync = ref.watch(hospitalDetailsProvider(widget.hospitalId));
+    final reviewsAsync = ref.watch(hospitalReviewsProvider(widget.hospitalId));
+    final userState = ref.watch(userProvider);
+    final isReviewLoading = ref.watch(reviewLoadingProvider);
 
   return hospitalAsync.when(
     loading: () => Scaffold(
@@ -285,123 +378,141 @@ Widget build(BuildContext context) {
           ? (hospitalData["image"]["imageUrl"] ?? "")
           : "";
 
-      return DefaultTabController(
-        length: 5,
-        child: Scaffold(
-          backgroundColor: const Color(0xFFECFDF5),
-          body: SafeArea(
-            child: Column(
-              children: [
-                // Top Image
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(screenWidth * 0.05)),
-                      child: imageUrl.isNotEmpty
-                          ? Image.network(
-                              imageUrl,
-                              height: screenHeight * 0.33,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Image.asset(
-                                  'images/hospital.jpg',
-                                  height: screenHeight * 0.33,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                );
-                              },
-                            )
-                          : Image.asset(
-                              'images/hospital.jpg',
-                              height: screenHeight * 0.33,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                    Positioned(
-                      top: screenHeight * 0.015,
-                      left: screenWidth * 0.03,
-                      child: CircleAvatar(
-                        backgroundColor: Colors.black45,
-                        radius: screenWidth * 0.06,
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.arrow_back_ios_new,
-                            color: Colors.white,
-                            size: screenWidth * 0.065,
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: screenHeight * 0.01),
-                TabBar(
-                  isScrollable: true,
-                  labelColor: Colors.green,
-                  unselectedLabelColor: Colors.black,
-                  indicatorColor: Colors.green,
-                  labelStyle: TextStyle(
-                    fontSize: screenWidth * 0.0375,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  unselectedLabelStyle: TextStyle(fontSize: screenWidth * 0.035),
-                  tabs: const [
-                    Tab(text: "Information"),
-                    Tab(text: "Specialties"),
-                    Tab(text: "Working Hours"),
-                    Tab(text: "Location"),
-                    Tab(text: "Reviews"),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
+        return DefaultTabController(
+          length: 5,
+          child: Scaffold(
+            backgroundColor: const Color(0xFFECFDF5),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Stack(
                     children: [
-                      InfoTab(hospital: hospitalData, makePhoneCall: _makePhoneCall),
-                      SpecialtiesTab(
-                        hospital: hospitalData,
-                        onSpecialtyTap: _navigateToDoctorsPage,
-                      ),
-                      HoursTab(
-                        hospital: hospitalData,
-                        formatTime: _formatTime,
-                      ),
-                      LocationTab(
-                        hospital: hospitalData,
-                        onOpenMaps: _openMaps,
-                      ),
-                      ReviewsTab(
-                        hospitalId: widget.hospitalId,
-                        reviews: reviewsAsync.when(
-                          data: (reviews) => reviews,
-                          loading: () => [],
-                          error: (_, __) => [],
+                      ClipRRect(
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(screenWidth * 0.05),
                         ),
-                        currentUserId: userState.userId,
-                        currentUserName: userState.userName,
-                        currentUserEmail: userState.userEmail,
-                        isReviewLoading: isReviewLoading,
-                        onCreateReview: () async {
-                          // ReviewsTab handles internally
-                        },
-                        onUpdateReview: (reviewId) {},
-                        onDeleteReview: _deleteReview,
-                        onNavigateToLogin: _navigateToLogin,
-                        onInitializeUser: () async {
-                          await ref.read(userProvider.notifier).initializeUser();
-                        },
+                        child: imageUrl.isNotEmpty
+                            ? Image.network(
+                                imageUrl,
+                                height: screenHeight * 0.33,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Image.asset(
+                                    'images/hospital.jpg',
+                                    height: screenHeight * 0.33,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                'images/hospital.jpg',
+                                height: screenHeight * 0.33,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                      Positioned(
+                        top: screenHeight * 0.015,
+                        left: screenWidth * 0.03,
+                        child: CircleAvatar(
+                          backgroundColor: Colors.black45,
+                          radius: screenWidth * 0.06,
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.arrow_back_ios_new,
+                              color: Colors.white,
+                              size: screenWidth * 0.065,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                  SizedBox(height: screenHeight * 0.01),
+                  TabBar(
+                    isScrollable: true,
+                    labelColor: Colors.green,
+                    unselectedLabelColor: Colors.black,
+                    indicatorColor: Colors.green,
+                    labelStyle: TextStyle(
+                      fontSize: screenWidth * 0.0375,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    unselectedLabelStyle: TextStyle(
+                      fontSize: screenWidth * 0.035,
+                    ),
+                    tabs: const [
+                      Tab(text: "Information"),
+                      Tab(text: "Specialties"),
+                      Tab(text: "Working Hours"),
+                      Tab(text: "Location"),
+                      Tab(text: "Reviews"),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        InfoTab(
+                          hospital: hospitalData,
+                          makePhoneCall: _makePhoneCall,
+                        ),
+                        SpecialtiesTab(
+                          hospital: hospitalData,
+                          onSpecialtyTap: _navigateToDoctorsPage,
+                        ),
+                        HoursTab(
+                          hospital: hospitalData,
+                          formatTime: _formatTime,
+                        ),
+
+                        LocationTab(
+                          hospital: hospitalData,
+                          userLatitude: _currentPosition?.latitude,
+                          userLongitude: _currentPosition?.longitude,
+                        ),
+                        SizedBox(
+                          // ✅ Wrap LocationTab with SizedBox
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: LocationTab(
+                            hospital: hospitalData,
+                            userLatitude: _currentPosition?.latitude,
+                            userLongitude: _currentPosition?.longitude,
+                          ),
+                        ),
+                        ReviewsTab(
+                          hospitalId: widget.hospitalId,
+                          reviews: reviewsAsync.when(
+                            data: (reviews) => reviews,
+                            loading: () => [],
+                            error: (_, __) => [],
+                          ),
+                          currentUserId: userState.userId,
+                          currentUserName: userState.userName,
+                          currentUserEmail: userState.userEmail,
+                          isReviewLoading: isReviewLoading,
+                          onCreateReview: () async {},
+                          onUpdateReview: (reviewId) {},
+                          onDeleteReview: _deleteReview,
+                          onNavigateToLogin: _navigateToLogin,
+                          onInitializeUser: () async {
+                            await ref
+                                .read(userProvider.notifier)
+                                .initializeUser();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 }
