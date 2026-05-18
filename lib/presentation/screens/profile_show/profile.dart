@@ -514,7 +514,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) =>
-                                                MyBloodDetailsPage(userId: userId),
+                                                MyBloodDetailsPage(),
                                           ),
                                         );
                                       },
@@ -578,116 +578,116 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                     );
                                   },
                                 ),
-                                     const Divider(height: 0),
-                                     _buildProfileOption(
-                                      icon: Icons.note_sharp,
-                                      title: 'Lab Report',
-                                      subtitle: 'Lab report details',
-                                      screenWidth: screenWidth,
-                                      screenHeight: screenHeight,
-                                      onTap: () async {
-                                        final prefs =
-                                            await SharedPreferences.getInstance();
-                                        String userId =
-                                            prefs.getString('userId') ?? '';
+                                    //  const Divider(height: 0),
+                                    //  _buildProfileOption(
+                                    //   icon: Icons.note_sharp,
+                                    //   title: 'Lab Report',
+                                    //   subtitle: 'Lab report details',
+                                    //   screenWidth: screenWidth,
+                                    //   screenHeight: screenHeight,
+                                    //   onTap: () async {
+                                    //     final prefs =
+                                    //         await SharedPreferences.getInstance();
+                                    //     String userId =
+                                    //         prefs.getString('userId') ?? '';
 
-                                        if (userId.isEmpty) {
-                                           showDialog(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              title: Text("Login Required", style: TextStyle(fontSize: screenWidth * 0.045)),
-                                              content: Text(
-                                                "Please login first",
-                                                style: TextStyle(fontSize: screenWidth * 0.04),
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(context),
-                                                  child: Text("Cancel", style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.04)),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            Signin(),
-                                                      ),
-                                                    );
-                                                  },
-                                                  child: Text("Login", style: TextStyle(color: Colors.green, fontSize: screenWidth * 0.04)),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                          return;
-                                        }
+                                    //     if (userId.isEmpty) {
+                                    //        showDialog(
+                                    //         context: context,
+                                    //         builder: (context) => AlertDialog(
+                                    //           title: Text("Login Required", style: TextStyle(fontSize: screenWidth * 0.045)),
+                                    //           content: Text(
+                                    //             "Please login first",
+                                    //             style: TextStyle(fontSize: screenWidth * 0.04),
+                                    //           ),
+                                    //           actions: [
+                                    //             TextButton(
+                                    //               onPressed: () =>
+                                    //                   Navigator.pop(context),
+                                    //               child: Text("Cancel", style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.04)),
+                                    //             ),
+                                    //             TextButton(
+                                    //               onPressed: () {
+                                    //                 Navigator.pop(context);
+                                    //                 Navigator.push(
+                                    //                   context,
+                                    //                   MaterialPageRoute(
+                                    //                     builder: (context) =>
+                                    //                         Signin(),
+                                    //                   ),
+                                    //                 );
+                                    //               },
+                                    //               child: Text("Login", style: TextStyle(color: Colors.green, fontSize: screenWidth * 0.04)),
+                                    //             ),
+                                    //           ],
+                                    //         ),
+                                    //       );
+                                    //       return;
+                                    //     }
 
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const LabReport(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    const Divider(height: 0),
-                                      _buildProfileOption(
-                                      icon: Icons.history_outlined,
-                                      title: 'My History',
-                                      subtitle: 'view details',
-                                      screenWidth: screenWidth,
-                                      screenHeight: screenHeight,
-                                      onTap: () async {
-                                        final prefs =
-                                            await SharedPreferences.getInstance();
-                                        String userId =
-                                            prefs.getString('userId') ?? '';
+                                    //     Navigator.push(
+                                    //       context,
+                                    //       MaterialPageRoute(
+                                    //         builder: (context) => const LabReport(),
+                                    //       ),
+                                    //     );
+                                    //   },
+                                    // ),
+                                    // const Divider(height: 0),
+                                    //   _buildProfileOption(
+                                    //   icon: Icons.history_outlined,
+                                    //   title: 'My History',
+                                    //   subtitle: 'view details',
+                                    //   screenWidth: screenWidth,
+                                    //   screenHeight: screenHeight,
+                                    //   onTap: () async {
+                                    //     final prefs =
+                                    //         await SharedPreferences.getInstance();
+                                    //     String userId =
+                                    //         prefs.getString('userId') ?? '';
 
-                                        if (userId.isEmpty) {
-                                           showDialog(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              title: Text("Login Required", style: TextStyle(fontSize: screenWidth * 0.045)),
-                                              content: Text(
-                                                "Please login first",
-                                                style: TextStyle(fontSize: screenWidth * 0.04),
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(context),
-                                                  child: Text("Cancel", style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.04)),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            Signin(),
-                                                      ),
-                                                    );
-                                                  },
-                                                  child: Text("Login", style: TextStyle(color: Colors.green, fontSize: screenWidth * 0.04)),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                          return;
-                                        }
+                                    //     if (userId.isEmpty) {
+                                    //        showDialog(
+                                    //         context: context,
+                                    //         builder: (context) => AlertDialog(
+                                    //           title: Text("Login Required", style: TextStyle(fontSize: screenWidth * 0.045)),
+                                    //           content: Text(
+                                    //             "Please login first",
+                                    //             style: TextStyle(fontSize: screenWidth * 0.04),
+                                    //           ),
+                                    //           actions: [
+                                    //             TextButton(
+                                    //               onPressed: () =>
+                                    //                   Navigator.pop(context),
+                                    //               child: Text("Cancel", style: TextStyle(color: Colors.black, fontSize: screenWidth * 0.04)),
+                                    //             ),
+                                    //             TextButton(
+                                    //               onPressed: () {
+                                    //                 Navigator.pop(context);
+                                    //                 Navigator.push(
+                                    //                   context,
+                                    //                   MaterialPageRoute(
+                                    //                     builder: (context) =>
+                                    //                         Signin(),
+                                    //                   ),
+                                    //                 );
+                                    //               },
+                                    //               child: Text("Login", style: TextStyle(color: Colors.green, fontSize: screenWidth * 0.04)),
+                                    //             ),
+                                    //           ],
+                                    //         ),
+                                    //       );
+                                    //       return;
+                                    //     }
 
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const HistoryScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                    //     Navigator.push(
+                                    //       context,
+                                    //       MaterialPageRoute(
+                                    //         builder: (context) => const HistoryScreen(),
+                                    //       ),
+                                    //     );
+                                    //   },
+                                    // ),
                                     const Divider(height: 0),
 
                                     _buildProfileOption(

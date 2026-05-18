@@ -104,10 +104,14 @@ class DonorFormNotifier extends StateNotifier<DonorFormState> {
   }
 
   void updateSelectedState(Map<String, dynamic> stateData) {
-    final districts = (stateData['cities'] as List)
-        .map((d) => {'id': d['id'].toString(), 'name': d['name']})
+    final cities = stateData['cities'] ?? [];
+    final districts = (cities as List)
+        .map((d) => {
+              'id': d['id'].toString(),
+              'name': d['name'],
+            })
         .toList();
-    
+
     state = state.copyWith(
       selectedState: stateData,
       selectedDistrict: null,
@@ -117,6 +121,16 @@ class DonorFormNotifier extends StateNotifier<DonorFormState> {
 
   void updateSelectedDistrict(Map<String, dynamic> district) {
     state = state.copyWith(selectedDistrict: district);
+  }
+
+  // ✅ ADD THIS METHOD (used in edit mode hydration)
+  void updateStates(List<Map<String, dynamic>> newStates) {
+    state = state.copyWith(states: newStates);
+  }
+
+  // ✅ ADD THIS METHOD (used in edit mode hydration)
+  void updateDistricts(List<Map<String, dynamic>> newDistricts) {
+    state = state.copyWith(districts: newDistricts);
   }
 
   void setLoading(bool loading) {
@@ -133,32 +147,63 @@ class DonorFormNotifier extends StateNotifier<DonorFormState> {
 }
 
 // Donor Creation Provider
-final donorCreationProvider = FutureProvider.family<bool, Map<String, dynamic>>((ref, payload) async {
-  final apiService = ref.read(apiServiceProvider);
-  
-  try {
-    final response = await apiService.createADonor(payload);
-    
-    if (response.statusCode == 201) {
-      final bloodId = response.data["donor"]["_id"];
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('bloodId', bloodId);
-      return true;
-    } else {
-      throw Exception(response.data['message'] ?? 'Donate failed');
+final donorCreationProvider =
+    FutureProvider.family<bool, Map<String, dynamic>>(
+  (ref, payload) async {
+    final apiService = ref.read(apiServiceProvider);
+
+    try {
+      final response = await apiService.createADonor(payload);
+
+      print("STATUS => ${response.statusCode}");
+      print("DATA => ${response.data}");
+      
+
+      // ✅ accept any success code
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+print("🚀 Sending donor creation request with payload: $payload");
+// final response = await apiService.createADonor(payload);
+// print("✅ Response status: ${response.statusCode}");
+// print("📦 Response data: ${response.data}");
+        // safely extract id
+        final bloodId = response.data?["data"]?["id"]?.toString();
+
+        if (bloodId != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('bloodId', bloodId);
+        }
+
+        return true;
+      }
+
+      throw Exception(response.data?['message'] ?? 'Donate failed');
+
+    } on DioException catch (dioError) {
+
+      print("DIO ERROR => ${dioError.response?.data}");
+      print("DIO STATUS => ${dioError.response?.statusCode}");
+
+      String errorMessage = "Something went wrong";
+
+      if (dioError.response != null) {
+        try {
+          errorMessage =
+              dioError.response?.data['message'] ?? errorMessage;
+        } catch (_) {}
+      }
+
+      throw Exception(errorMessage);
+
+    } catch (e) {
+
+      print("GENERAL ERROR => $e");
+
+      throw Exception("Something went wrong");
     }
-  } on DioException catch (dioError) {
-    String errorMessage = "Something went wrong";
-    if (dioError.response != null) {
-      try {
-        errorMessage = dioError.response?.data['message'] ?? errorMessage;
-      } catch (_) {}
-    }
-    throw Exception(errorMessage);
-  } catch (e) {
-    throw Exception("Error: $e");
-  }
-});
+  },
+);
 
 // User Phone Provider
 final userPhoneProvider = FutureProvider<String?>((ref) async {

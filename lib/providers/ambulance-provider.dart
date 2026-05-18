@@ -1,100 +1,74 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/api_service.dart';
 
 // Provider for ApiService
-final apiServiceProvider = Provider<ApiService>((ref) {
-  return ApiService();
-});
+final apiServiceProvider = Provider<ApiService>((ref) => ApiService());
 
-// Provider for ambulance list
-final ambulanceListProvider = StateNotifierProvider<AmbulanceNotifier, List<dynamic>>((ref) {
-  return AmbulanceNotifier(ref.read(apiServiceProvider));
-});
+// Provider for ambulance list (state notifier)
+final ambulanceListProvider = StateNotifierProvider<AmbulanceNotifier, List<dynamic>>(
+  (ref) => AmbulanceNotifier(ref, ref.read(apiServiceProvider)),
+);
 
-// StateNotifier to manage ambulance data
-class AmbulanceNotifier extends StateNotifier<List<dynamic>> {
-  final ApiService apiService;
-  
-  AmbulanceNotifier(this.apiService) : super([]);
-
-Future<void> fetchAmbulances() async {
-  try {
-    final response = await apiService.getAllAmbulances();
-
-    if (response.statusCode == 200 && response.data != null) {
-      final data = response.data is List
-          ? response.data
-          : response.data['data'] ?? [];
-
-      // ✅ SAVE TO LOCAL
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('cached_ambulances', jsonEncode(data));
-
-      state = data;
-    }
-  } catch (e) {
-    print("❌ API failed → loading from cache");
-
-    // ✅ LOAD FROM LOCAL
-    final prefs = await SharedPreferences.getInstance();
-    final cached = prefs.getString('cached_ambulances');
-
-    if (cached != null) {
-      final decoded = jsonDecode(cached);
-
-state = List<Map<String, dynamic>>.from(decoded);
-    } else {
-      state = [];
-    }
-  }
-}
-}
-
-// Provider for loading state
+// Providers for UI state
 final isLoadingProvider = StateProvider<bool>((ref) => true);
-
-// Provider for search query
 final searchQueryProvider = StateProvider<String>((ref) => '');
-
-// Provider for ambulance ID
-final ambulanceIdProvider = StateProvider<String?>((ref) => null);
-
-// Provider for filter variables
 final selectedCountryProvider = StateProvider<String>((ref) => '');
 final selectedStateProvider = StateProvider<String>((ref) => '');
 final selectedDistrictProvider = StateProvider<String>((ref) => '');
 final selectedPlaceProvider = StateProvider<String>((ref) => '');
+final ambulanceIdProvider = StateProvider<String?>((ref) => null);
 
-// Computed provider for filtered ambulance list
-final filteredAmbulanceListProvider = Provider<List<dynamic>>((ref) {
-  final ambulanceList = ref.watch(ambulanceListProvider);
-  final searchQuery = ref.watch(searchQueryProvider);
-  final selectedCountry = ref.watch(selectedCountryProvider);
-  final selectedState = ref.watch(selectedStateProvider);
-  final selectedDistrict = ref.watch(selectedDistrictProvider);
-  final selectedPlace = ref.watch(selectedPlaceProvider);
-  
-  return ambulanceList.where((ambulance) {
-    final address = ambulance['address'] ?? {};
-    
-    final name = (ambulance['serviceName'] ?? '').toString().toLowerCase();
-    final country = (address['country'] ?? '').toString();
-    final state = (address['state'] ?? '').toString();
-    final district = (address['district'] ?? '').toString();
-    final place = (address['place'] ?? '').toString();
+class AmbulanceNotifier extends StateNotifier<List<dynamic>> {
+  final Ref _ref;
+  final ApiService _apiService;
 
-    final matchesSearch = name.contains(searchQuery.toLowerCase());
-    final matchesCountry = selectedCountry.isEmpty || country == selectedCountry;
-    final matchesState = selectedState.isEmpty || state == selectedState;
-    final matchesDistrict = selectedDistrict.isEmpty || district == selectedDistrict;
-    final matchesPlace = selectedPlace.isEmpty || place == selectedPlace;
+  AmbulanceNotifier(this._ref, this._apiService) : super([]);
 
-    return matchesSearch &&
-        matchesCountry &&
-        matchesState &&
-        matchesDistrict &&
-        matchesPlace;
-  }).toList();
-});
+  Future<void> fetchAmbulances() async {
+    List<dynamic> newData = [];
+    try {
+      final searchQuery = _ref.read(searchQueryProvider);
+      final country = _normalize(_ref.read(selectedCountryProvider));
+      final state = _normalize(_ref.read(selectedStateProvider));
+      final district = _normalize(_ref.read(selectedDistrictProvider));
+      final place = _normalize(_ref.read(selectedPlaceProvider));
+
+      final response = await _apiService.getAllAmbulances(
+        serviceName: searchQuery.isEmpty ? null : searchQuery,
+        country: country.isEmpty ? null : country,
+        state: state.isEmpty ? null : state,
+        district: district.isEmpty ? null : district,
+        place: place.isEmpty ? null : place,
+      );
+ log("🔍 SEARCH QUERY: $searchQuery");
+      if (response.statusCode == 200 && response.data != null) {
+        newData = response.data is List
+            ? response.data
+            : response.data['data'] ?? [];
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('cached_ambulances', jsonEncode(newData));
+      } else {
+        newData = [];
+      }
+    } catch (e) {
+      log("❌ API failed → loading from cache");
+      final prefs = await SharedPreferences.getInstance();
+      final cached = prefs.getString('cached_ambulances');
+      newData = cached != null
+          ? List<Map<String, dynamic>>.from(jsonDecode(cached))
+          : [];
+    } finally {
+      this.state = newData;   // assign only once
+      _ref.read(isLoadingProvider.notifier).state = false;
+    }
+  }
+
+  String _normalize(String? value) {
+    if (value == null || value.trim().isEmpty) return '';
+    final trimmed = value.trim();
+    return trimmed[0].toUpperCase() + trimmed.substring(1).toLowerCase();
+  }
+}

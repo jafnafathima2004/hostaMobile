@@ -10,11 +10,24 @@ class Profile extends ConsumerStatefulWidget {
 }
 
 class _ProfileState extends ConsumerState<Profile> {
-  @override
-  void initState() {
-    super.initState();
-    _initializeProfile();
-  }
+ @override
+void initState() {
+  super.initState();
+
+  ref.read(userDataProvider.notifier).loadUserIdAndProfile();
+
+  // ref.listen(userDataProvider, (prev, next) {
+  //   final nameController = ref.read(nameControllerProvider);
+  //   final emailController = ref.read(emailControllerProvider);
+  //   final phoneController = ref.read(phoneControllerProvider);
+
+  //   if (!next.isEditing) {
+  //     nameController.text = next.originalName ?? '';
+  //     emailController.text = next.originalEmail ?? '';
+  //     phoneController.text = next.originalPhone ?? '';
+  //   }
+  // });
+}
 
   Future<void> _initializeProfile() async {
     await ref.read(userDataProvider.notifier).loadUserIdAndProfile();

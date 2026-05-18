@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hosta/presentation/screens/ambulance/register.dart';
+import 'package:hosta/presentation/screens/auth/signin.dart';
 import 'package:hosta/providers/ambulance-provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Ambulance extends ConsumerStatefulWidget {
@@ -11,47 +14,64 @@ class Ambulance extends ConsumerStatefulWidget {
   ConsumerState<Ambulance> createState() => _AmbulanceState();
 }
 
+
 class _AmbulanceState extends ConsumerState<Ambulance> {
-@override
-@override
-void initState() {
-  super.initState();
-
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (!mounted) return;
-
-    ref.read(isLoadingProvider.notifier).state = true;
-    _fetchAmbulances();   
-  });
+  Timer? _debounce;
+final TextEditingController _searchController = TextEditingController();
+  @override
+void dispose() {
+  _debounce?.cancel();
+  _searchController.dispose();
+  super.dispose();
 }
-
-  Future<void> _fetchAmbulances() async {
-    try {
-      await ref.read(ambulanceListProvider.notifier).fetchAmbulances();
-      ref.read(isLoadingProvider.notifier).state = false;
-    } catch (e) {
-      ref.read(isLoadingProvider.notifier).state = false;
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
-
-  void _handleAmbulanceRegister() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const AmbulanceRegister(),
-      ),
-    ).then((_) {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _fetchAmbulances();
     });
   }
+  
+
+Future<void> _fetchAmbulances({bool showLoader = true}) async {
+  try {
+    if (showLoader) {
+      ref.read(isLoadingProvider.notifier).state = true;
+    }
+
+    await ref.read(ambulanceListProvider.notifier)
+        .fetchAmbulances();
+
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+}
+
+  void _handleAmbulanceRegister() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+
+    if (userId == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const Signin()),
+      ).then((_) => _handleAmbulanceRegister());
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AmbulanceRegister()),
+    ).then((_) => _fetchAmbulances());
+  }
 
   Future<void> _callNumber(String phone) async {
-    final Uri uri = Uri(scheme: 'tel', path: phone);
+    final uri = Uri(scheme: 'tel', path: phone);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
@@ -62,8 +82,7 @@ void initState() {
   }
 
   Future<void> _openMap(double lat, double lon) async {
-    final Uri uri =
-        Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lon");
+    final uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lon");
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
@@ -72,95 +91,93 @@ void initState() {
       );
     }
   }
-  String _normalize(String? value) {
-  if (value == null || value.trim().isEmpty) return '';
-  final trimmed = value.trim();
-  return trimmed[0].toUpperCase() + trimmed.substring(1).toLowerCase();
-}
-
-List<String> getFilteredCountries() {
-  final ambulanceList = ref.read(ambulanceListProvider);
-  final countries = <String>{};
-  for (final ambulance in ambulanceList) {
-    final address = ambulance['address'] ?? {};
-    final rawCountry = address['country']?.toString().trim() ?? '';
-    final country = _normalize(rawCountry);
-    if (country.isNotEmpty) countries.add(country);
-  }
-  return countries.toList()..sort();
-}
-
-List<String> getFilteredStates(String country) {
-  if (country.isEmpty) return [];
-  final normalizedCountry = _normalize(country);
-  final ambulanceList = ref.read(ambulanceListProvider);
-  final filteredStates = <String>{};
-  for (final ambulance in ambulanceList) {
-    final address = ambulance['address'] ?? {};
-    final rawCountry = address['country']?.toString().trim() ?? '';
-    final ambulanceCountry = _normalize(rawCountry);
-    final rawState = address['state']?.toString().trim() ?? '';
-    final state = _normalize(rawState);
-    if (ambulanceCountry == normalizedCountry && state.isNotEmpty) {
-      filteredStates.add(state);
-    }
-  }
-  return filteredStates.toList()..sort();
-}
-
-List<String> getFilteredDistricts(String country, String state) {
-  if (country.isEmpty || state.isEmpty) return [];
-  final normalizedCountry = _normalize(country);
-  final normalizedState = _normalize(state);
-  final ambulanceList = ref.read(ambulanceListProvider);
-  final filteredDistricts = <String>{};
-  for (final ambulance in ambulanceList) {
-    final address = ambulance['address'] ?? {};
-    final rawCountry = address['country']?.toString().trim() ?? '';
-    final ambulanceCountry = _normalize(rawCountry);
-    final rawState = address['state']?.toString().trim() ?? '';
-    final ambulanceState = _normalize(rawState);
-    final rawDistrict = address['district']?.toString().trim() ?? '';
-    final district = _normalize(rawDistrict);
-    if (ambulanceCountry == normalizedCountry &&
-        ambulanceState == normalizedState &&
-        district.isNotEmpty) {
-      filteredDistricts.add(district);
-    }
-  }
-  return filteredDistricts.toList()..sort();
-}
-
-List<String> getFilteredPlaces(String country, String state, String district) {
-  if (country.isEmpty || state.isEmpty || district.isEmpty) return [];
-  final normalizedCountry = _normalize(country);
-  final normalizedState = _normalize(state);
-  final normalizedDistrict = _normalize(district);
-  final ambulanceList = ref.read(ambulanceListProvider);
-  final filteredPlaces = <String>{};
-  for (final ambulance in ambulanceList) {
-    final address = ambulance['address'] ?? {};
-    final rawCountry = address['country']?.toString().trim() ?? '';
-    final ambulanceCountry = _normalize(rawCountry);
-    final rawState = address['state']?.toString().trim() ?? '';
-    final ambulanceState = _normalize(rawState);
-    final rawDistrict = address['district']?.toString().trim() ?? '';
-    final ambulanceDistrict = _normalize(rawDistrict);
-    final rawPlace = address['place']?.toString().trim() ?? '';
-    final place = _normalize(rawPlace);
-    if (ambulanceCountry == normalizedCountry &&
-        ambulanceState == normalizedState &&
-        ambulanceDistrict == normalizedDistrict &&
-        place.isNotEmpty) {
-      filteredPlaces.add(place);
-    }
-  }
-  return filteredPlaces.toList()..sort();
-}
 
   void _refreshData() {
-    ref.read(isLoadingProvider.notifier).state = true;
     _fetchAmbulances();
+  }
+
+  String _normalize(String? value) {
+    if (value == null || value.trim().isEmpty) return '';
+    final trimmed = value.trim();
+    return trimmed[0].toUpperCase() + trimmed.substring(1).toLowerCase();
+  }
+
+  // Extract distinct countries from current ambulance list
+  List<String> getFilteredCountries() {
+    final ambulanceList = ref.read(ambulanceListProvider);
+    final countries = <String>{};
+    for (final ambulance in ambulanceList) {
+      final address = ambulance['address'] ?? {};
+      final rawCountry = address['country']?.toString().trim() ?? '';
+      final country = _normalize(rawCountry);
+      if (country.isNotEmpty) countries.add(country);
+    }
+    return countries.toList()..sort();
+  }
+
+  List<String> getFilteredStates(String country) {
+    if (country.isEmpty) return [];
+    final normalizedCountry = _normalize(country);
+    final ambulanceList = ref.read(ambulanceListProvider);
+    final states = <String>{};
+    for (final ambulance in ambulanceList) {
+      final address = ambulance['address'] ?? {};
+      final rawCountry = address['country']?.toString().trim() ?? '';
+      final ambulanceCountry = _normalize(rawCountry);
+      if (ambulanceCountry == normalizedCountry) {
+        final rawState = address['state']?.toString().trim() ?? '';
+        final state = _normalize(rawState);
+        if (state.isNotEmpty) states.add(state);
+      }
+    }
+    return states.toList()..sort();
+  }
+
+  List<String> getFilteredDistricts(String country, String state) {
+    if (country.isEmpty || state.isEmpty) return [];
+    final normalizedCountry = _normalize(country);
+    final normalizedState = _normalize(state);
+    final ambulanceList = ref.read(ambulanceListProvider);
+    final districts = <String>{};
+    for (final ambulance in ambulanceList) {
+      final address = ambulance['address'] ?? {};
+      final rawCountry = address['country']?.toString().trim() ?? '';
+      final ambulanceCountry = _normalize(rawCountry);
+      final rawState = address['state']?.toString().trim() ?? '';
+      final ambulanceState = _normalize(rawState);
+      if (ambulanceCountry == normalizedCountry && ambulanceState == normalizedState) {
+        final rawDistrict = address['district']?.toString().trim() ?? '';
+        final district = _normalize(rawDistrict);
+        if (district.isNotEmpty) districts.add(district);
+      }
+    }
+    return districts.toList()..sort();
+  }
+
+  List<String> getFilteredPlaces(String country, String state, String district) {
+    if (country.isEmpty || state.isEmpty || district.isEmpty) return [];
+    final normalizedCountry = _normalize(country);
+    final normalizedState = _normalize(state);
+    final normalizedDistrict = _normalize(district);
+    final ambulanceList = ref.read(ambulanceListProvider);
+    final places = <String>{};
+    for (final ambulance in ambulanceList) {
+      final address = ambulance['address'] ?? {};
+      final rawCountry = address['country']?.toString().trim() ?? '';
+      final ambulanceCountry = _normalize(rawCountry);
+      final rawState = address['state']?.toString().trim() ?? '';
+      final ambulanceState = _normalize(rawState);
+      final rawDistrict = address['district']?.toString().trim() ?? '';
+      final ambulanceDistrict = _normalize(rawDistrict);
+      if (ambulanceCountry == normalizedCountry &&
+          ambulanceState == normalizedState &&
+          ambulanceDistrict == normalizedDistrict) {
+        final rawPlace = address['place']?.toString().trim() ?? '';
+        final place = _normalize(rawPlace);
+        if (place.isNotEmpty) places.add(place);
+      }
+    }
+    return places.toList()..sort();
   }
 
   @override
@@ -168,14 +185,8 @@ List<String> getFilteredPlaces(String country, String state, String district) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final isLoading = ref.watch(isLoadingProvider);
-    final filteredList = ref.watch(filteredAmbulanceListProvider);
-    final ambulanceList = ref.watch(ambulanceListProvider);
+    final ambulanceList = ref.watch(ambulanceListProvider);  // already filtered by backend
     final ambulanceId = ref.watch(ambulanceIdProvider);
-    final searchQuery = ref.watch(searchQueryProvider);
-    final selectedCountry = ref.watch(selectedCountryProvider);
-    final selectedState = ref.watch(selectedStateProvider);
-    final selectedDistrict = ref.watch(selectedDistrictProvider);
-    final selectedPlace = ref.watch(selectedPlaceProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFECFDF5),
@@ -227,26 +238,41 @@ List<String> getFilteredPlaces(String country, String state, String district) {
                   child: Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          onChanged: (value) {
-                            ref.read(searchQueryProvider.notifier).state = value;
-                          },
-                          decoration: InputDecoration(
-                            hintText: "Search ambulance service...",
-                            hintStyle: TextStyle(fontSize: screenWidth * 0.035),
-                            prefixIcon: Icon(Icons.search, color: Colors.grey, size: screenWidth * 0.06),
-                            filled: true,
-                            fillColor: Colors.grey[100],
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.0125),
-                          ),
-                        ),
+                        child:
+                      TextField(
+  controller: _searchController,
+  onChanged: (value) {
+    if (_debounce?.isActive ?? false) {
+      _debounce!.cancel();
+    }
+
+   _debounce = Timer(const Duration(milliseconds: 500), () async {
+  ref.read(searchQueryProvider.notifier).state = value.trim();
+  await _fetchAmbulances(showLoader: false);
+});
+  },
+  decoration: InputDecoration(
+    hintText: "Search ambulance service...",
+    hintStyle: TextStyle(fontSize: screenWidth * 0.035),
+    prefixIcon: Icon(
+      Icons.search,
+      color: Colors.grey,
+      size: screenWidth * 0.06,
+    ),
+    filled: true,
+    fillColor: Colors.grey[100],
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(screenWidth * 0.03),
+      borderSide: BorderSide.none,
+    ),
+    contentPadding: EdgeInsets.symmetric(
+      vertical: screenHeight * 0.0125,
+    ),
+  ),
+)
                       ),
                       SizedBox(width: screenWidth * 0.02),
-                      if(ambulanceId == null)...{
+                      if (ambulanceId == null)
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
@@ -255,40 +281,30 @@ List<String> getFilteredPlaces(String country, String state, String district) {
                               vertical: screenHeight * 0.015,
                             ),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(screenWidth * 0.025)),
-                          ),
-                          onPressed: _handleAmbulanceRegister,
-                          child: Text(
-                            "Register",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: screenWidth * 0.035,
+                              borderRadius: BorderRadius.circular(screenWidth * 0.025),
                             ),
                           ),
+                          onPressed: _handleAmbulanceRegister,
+                          child: Text("Register", style: TextStyle(color: Colors.white)),
                         ),
-                      }else...{
-                        const SizedBox.shrink()
-                      }
                     ],
                   ),
                 ),
                 _buildLocationAndClearButton(context, screenWidth, screenHeight),
                 Expanded(
-                  child: filteredList.isEmpty
+                  child: ambulanceList.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                ambulanceList.isEmpty ? Icons.error_outline : Icons.search_off,
+                                Icons.search_off,
                                 size: screenWidth * 0.15,
                                 color: Colors.grey,
                               ),
                               SizedBox(height: screenHeight * 0.02),
                               Text(
-                                ambulanceList.isEmpty 
-                                  ? "No ambulances available" 
-                                  : "No ambulances found",
+                                "No ambulances found",
                                 style: TextStyle(
                                   fontSize: screenWidth * 0.04,
                                   color: Colors.grey,
@@ -296,43 +312,39 @@ List<String> getFilteredPlaces(String country, String state, String district) {
                               ),
                               SizedBox(height: screenHeight * 0.01),
                               Text(
-                                ambulanceList.isEmpty 
-                                  ? "Check your connection or try again later"
-                                  : "Try adjusting your filters",
+                                "Try adjusting your filters",
                                 style: TextStyle(
                                   fontSize: screenWidth * 0.035,
                                   color: Colors.grey,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              if (ambulanceList.isEmpty) ...[
-                                SizedBox(height: screenHeight * 0.025),
-                                ElevatedButton(
-                                  onPressed: _refreshData,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: screenWidth * 0.06,
-                                      vertical: screenHeight * 0.015,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    "Try Again",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: screenWidth * 0.035,
-                                    ),
+                              SizedBox(height: screenHeight * 0.025),
+                              ElevatedButton(
+                                onPressed: _refreshData,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: screenWidth * 0.06,
+                                    vertical: screenHeight * 0.015,
                                   ),
                                 ),
-                              ],
+                                child: Text(
+                                  "Try Again",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: screenWidth * 0.035,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         )
                       : ListView.builder(
-                          itemCount: filteredList.length,
+                          itemCount: ambulanceList.length,
                           padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
                           itemBuilder: (context, index) {
-                            final amb = filteredList[index];
+                            final amb = ambulanceList[index];
                             final address = amb['address'] ?? {};
 
                             return Card(
@@ -411,13 +423,9 @@ List<String> getFilteredPlaces(String country, String state, String district) {
                                           IconButton(
                                             onPressed: () {
                                               double lat = double.tryParse(
-                                                      amb["latitude"]
-                                                          .toString()) ??
-                                                  0;
+                                                      amb["latitude"].toString()) ?? 0;
                                               double lon = double.tryParse(
-                                                      amb["longitude"]
-                                                          .toString()) ??
-                                                  0;
+                                                      amb["longitude"].toString()) ?? 0;
                                               _openMap(lat, lon);
                                             },
                                             icon: Icon(
@@ -440,53 +448,56 @@ List<String> getFilteredPlaces(String country, String state, String district) {
     );
   }
 
-  Widget _buildLocationAndClearButton(BuildContext context, double screenWidth, double screenHeight) => Padding(
-        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenHeight * 0.005),
-        child: Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () => _openLocationFilter(context, screenWidth, screenHeight),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03, vertical: screenHeight * 0.0125),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300, width: screenWidth * 0.0025),
-                    borderRadius: BorderRadius.circular(screenWidth * 0.025),
+  Widget _buildLocationAndClearButton(BuildContext context, double screenWidth, double screenHeight) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04, vertical: screenHeight * 0.005),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () => _openLocationFilter(context, screenWidth, screenHeight),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03, vertical: screenHeight * 0.0125),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300, width: screenWidth * 0.0025),
+                  borderRadius: BorderRadius.circular(screenWidth * 0.025),
+                ),
+                child: Text(
+                  ref.watch(selectedCountryProvider).isEmpty
+                      ? "Select Location"
+                      : "${ref.watch(selectedCountryProvider)} > ${ref.watch(selectedStateProvider)} > ${ref.watch(selectedDistrictProvider)} > ${ref.watch(selectedPlaceProvider)}",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.035,
+                    color: Colors.black54,
                   ),
-                  child: Text(
-                    ref.watch(selectedCountryProvider).isEmpty
-                        ? "Select Location"
-                        : "${ref.watch(selectedCountryProvider)} > ${ref.watch(selectedStateProvider)} > ${ref.watch(selectedDistrictProvider)} > ${ref.watch(selectedPlaceProvider)}",
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.035,
-                      color: Colors.black54,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
-            TextButton.icon(
-              onPressed: () {
-                ref.read(selectedCountryProvider.notifier).state = '';
-                ref.read(selectedStateProvider.notifier).state = '';
-                ref.read(selectedDistrictProvider.notifier).state = '';
-                ref.read(selectedPlaceProvider.notifier).state = '';
-                ref.read(searchQueryProvider.notifier).state = '';
-              },
-              icon: Icon(Icons.clear, color: Colors.red, size: screenWidth * 0.05),
-              label: Text(
-                "Clear",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: screenWidth * 0.035,
-                ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              ref.read(selectedCountryProvider.notifier).state = '';
+              ref.read(selectedStateProvider.notifier).state = '';
+              ref.read(selectedDistrictProvider.notifier).state = '';
+              ref.read(selectedPlaceProvider.notifier).state = '';
+              ref.read(searchQueryProvider.notifier).state = '';
+              _fetchAmbulances();
+            },
+            icon: Icon(Icons.clear, color: Colors.red, size: screenWidth * 0.05),
+            label: Text(
+              "Clear",
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: screenWidth * 0.035,
               ),
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 
   void _openLocationFilter(BuildContext context, double screenWidth, double screenHeight) {
     String tempCountry = ref.read(selectedCountryProvider);
@@ -541,12 +552,9 @@ List<String> getFilteredPlaces(String country, String state, String district) {
                       ),
                     ),
                     items: [
-                      DropdownMenuItem(
+                      const DropdownMenuItem(
                         value: '',
-                        child: Text(
-                          "Select Country",
-                          style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.035),
-                        ),
+                        child: Text("Select Country", style: TextStyle(color: Colors.grey)),
                       ),
                       ...countries.map((country) {
                         return DropdownMenuItem(
@@ -582,12 +590,9 @@ List<String> getFilteredPlaces(String country, String state, String district) {
                         ),
                       ),
                       items: [
-                        DropdownMenuItem(
+                        const DropdownMenuItem(
                           value: '',
-                          child: Text(
-                            "Select State",
-                            style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.035),
-                          ),
+                          child: Text("Select State", style: TextStyle(color: Colors.grey)),
                         ),
                         ...filteredStates.map((state) {
                           return DropdownMenuItem(
@@ -623,12 +628,9 @@ List<String> getFilteredPlaces(String country, String state, String district) {
                         ),
                       ),
                       items: [
-                        DropdownMenuItem(
+                        const DropdownMenuItem(
                           value: '',
-                          child: Text(
-                            "Select District",
-                            style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.035),
-                          ),
+                          child: Text("Select District", style: TextStyle(color: Colors.grey)),
                         ),
                         ...filteredDistricts.map((district) {
                           return DropdownMenuItem(
@@ -663,12 +665,9 @@ List<String> getFilteredPlaces(String country, String state, String district) {
                         ),
                       ),
                       items: [
-                        DropdownMenuItem(
+                        const DropdownMenuItem(
                           value: '',
-                          child: Text(
-                            "Select Place",
-                            style: TextStyle(color: Colors.grey, fontSize: screenWidth * 0.035),
-                          ),
+                          child: Text("Select Place", style: TextStyle(color: Colors.grey)),
                         ),
                         ...filteredPlaces.map((place) {
                           return DropdownMenuItem(
@@ -693,6 +692,7 @@ List<String> getFilteredPlaces(String country, String state, String district) {
                       ref.read(selectedDistrictProvider.notifier).state = tempDistrict;
                       ref.read(selectedPlaceProvider.notifier).state = tempPlace;
                       Navigator.pop(context);
+                      _fetchAmbulances();  // apply filters
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,

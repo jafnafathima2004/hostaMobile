@@ -8,25 +8,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
-  Future<void> _logout(BuildContext context) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      
-      if (context.mounted) {
-        showTopSnackBar(context, "Logged out successfully");
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const Signin()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      print("❌ Error during logout: $e");
-      if (context.mounted) {
-        showTopSnackBar(context, "Error during logout", isError: true);
-      }
-    }
+Future<void> _logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  print("BEFORE CLEAR => ${prefs.getKeys()}");
+
+  await prefs.clear();
+
+  print("AFTER CLEAR => ${prefs.getKeys()}");
+
+  if (context.mounted) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const Signin()),
+      (route) => false,
+    );
   }
+}
 
   void _confirmLogout(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;

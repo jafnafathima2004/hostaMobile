@@ -52,11 +52,11 @@ class _OtpVerificationState extends State<OtpVerification> {
 
           otpController.text = widget.backendOtp!;
 
-          Future.delayed(const Duration(milliseconds: 800), () {
-            if (mounted && !isVerifying) {
-              _verifyOtp();
-            }
-          });
+          // Future.delayed(const Duration(milliseconds: 800), () {
+          //   if (mounted && !isVerifying) {
+          //     _verifyOtp();
+          //   }
+          // });
         }
       });
     }
@@ -161,6 +161,7 @@ log("🔵 _verifyOtp() CALLED with OTP: $otp");
 
         if (mounted) {
           showTopSnackBar(context, "Login successful!");
+          
           // Navigate to main screen (your bottom navigation)
           Navigator.pushAndRemoveUntil(
             context,

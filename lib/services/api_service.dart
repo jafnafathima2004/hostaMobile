@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
   // ✅ Add constructor
   ApiService() {
     _dio = Dio(BaseOptions(baseUrl: "https://zorrowtek.in"));
+    
       _dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) async {
       final prefs = await SharedPreferences.getInstance();
@@ -78,7 +79,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Refresh Token - 
 Future<Response> refreshUserToken(Map<String, dynamic> data) async {
+  
   return await _dio.post('/api/users/refreshToken', data: data);
+
 }
   //Medicine Reminder CREATE
  Future<Response> createMedicineReminder(Map<String, dynamic> data) async {
@@ -178,14 +181,33 @@ Future<Response> getAllCarousel({
 
 
   // GET all donors
-  Future<Response> getAllDonors() async {
-    return await _dio.get('/api/donors');
-  }
+Future<Response> getAllDonors({
+  String? userId,
+  String? bloodGroup,
+  String? pincode,
+  String? place,
+  String? country,
+  String? state,
+  String? district,
+  String? name,           // new parameter
+}) async {
+  final Map<String, dynamic> queryParams = {};
+  if (userId != null) queryParams['userId'] = userId;
+  if (bloodGroup != null) queryParams['bloodGroup'] = bloodGroup;
+  if (pincode != null) queryParams['pincode'] = pincode;
+  if (place != null) queryParams['place'] = place;
+  if (country != null) queryParams['country'] = country;
+  if (state != null) queryParams['state'] = state;
+  if (district != null) queryParams['district'] = district;
+  if (name != null) queryParams['name'] = name;   // add name if provided
+
+  return await _dio.get('/api/donors', queryParameters: queryParams);
+}
 
   // GET single donor
-  Future<Response> getADonor(String id) async {
-    return await _dio.get('/api/donors/$id');
-  }
+  // Future<Response> getADonor(String id) async {
+  //   return await _dio.get('/api/donors/$id');
+  // }
 
   // CREATE donor
   Future<Response> createADonor(Map<String, dynamic> data) async {
@@ -196,12 +218,11 @@ Future<Response> updateDonor(String id, Map<String, dynamic> data) async {
   return await _dio.put('/api/donors/$id', data: data);
 }
   // DELETE donor
-  Future<Response> deleteDonor(String id) async {
-    return await _dio.delete(
-      //'/api/donors/$id'
-      "/api/ambulance/$id"
-      );
-  }
+ Future<Response> deleteDonor(String id) async {
+  print("DELETE DONOR ID => $id");
+
+  return await _dio.delete('/api/donors/$id');
+}
 
   // LOGIN
   Future<Response> loginUser(Map<String, dynamic> data) async {
@@ -286,10 +307,28 @@ Future<Response> updateDonor(String id, Map<String, dynamic> data) async {
   }
 
   // GET Ambulances
-  Future<Response> getAllAmbulances() async {
-    return await _dio.get('/api/ambulance');
-    
-  }
+Future<Response> getAllAmbulances({
+  String? userId,     
+  String? serviceName,
+  String? place,
+  String? country,
+  String? state,
+  String? district,
+  String? pincode,
+}) async {
+  final Map<String, dynamic> queryParams = {};
+  if (userId != null) queryParams['userId'] = userId;
+  if (serviceName != null) queryParams['name'] = serviceName;
+  if (place != null) queryParams['place'] = place;
+  if (country != null) queryParams['country'] = country;
+  if (state != null) queryParams['state'] = state;
+  if (district != null) queryParams['district'] = district;
+  if (pincode != null) queryParams['pincode'] = pincode;
+   log("📤 QUERY PARAMS: $queryParams");
+
+  return await _dio.get('/api/ambulance', queryParameters: queryParams);
+  
+}
   //  GET MY AMBULANCE 
 Future<Response> getMyAmbulance(String id) async {
   return await _dio.get('/api/ambulance/$id');
@@ -302,7 +341,10 @@ Future<Response> deleteAmbulance(String id) async {
 Future<Response> editAmbulance(String id, Map<String, dynamic> updatedData) async {
   return await _dio.put('/api/ambulance/$id', data: updatedData);
 }
-
+//create Ambulance
+ Future<Response> createAmbulance(Map<String, dynamic> data) async {
+    return await _dio.post('/api/ambulance', data: data);
+  }
 
   // GET Notifications
   Future<Response> getAllNotificationRead(String id) async {
@@ -383,9 +425,9 @@ Future<Response> getDoctorById(String doctorId) async {
   );
 }
   // UPDATE booking
-  Future<Response> getFilter(String filter) async {
-    return await _dio.get('/api/hospital/filter/$filter');
-  }
+  // Future<Response> getFilter(String filter) async {
+  //   return await _dio.get('/api/hospital/filter/$filter');
+  // }
 
     Future<Response> sendEmail( Map<String, dynamic> data) async {
     return await _dio.post('/api/email', data: data);
@@ -395,7 +437,10 @@ Future<Response> getDoctorById(String doctorId) async {
   Future<Response> sendResetPasswrord( Map<String, dynamic> data) async {
     return await _dio.post('/api/users/password', data: data);
   }
-  
+    // ✅ CHANGE PASSWORD (new method)
+  Future<Response> changePassword(Map<String, dynamic> data) async {
+    return await _dio.post('/api/users/auth/change-password', data: data);
+  }
 //   // ================= PHARMACY =================
 
 // // GET all pharmacies

@@ -161,8 +161,8 @@ Future<void> loadProfile({int retryCount = 0}) async {
       };
 
       // Use the new method that handles image upload
-      await _apiService.updateUserWithImage(state.userId!, payload, state.imageFile);
-
+      //await _apiService.updateUserWithImage(state.userId!, payload, state.imageFile);
+await _apiService.updateUser(state.userId!, payload);
       // Update original values
       state = state.copyWith(
         isEditing: false,
@@ -282,21 +282,21 @@ final phoneControllerProvider = Provider<TextEditingController>((ref) {
 });
 
 // Sync controllers with user data
-final syncControllersProvider = Provider((ref) {
-  final userDataState = ref.watch(userDataProvider);
-  final nameController = ref.read(nameControllerProvider);
-  final emailController = ref.read(emailControllerProvider);
-  final phoneController = ref.read(phoneControllerProvider);
+// final syncControllersProvider = Provider((ref) {
+//   final userDataState = ref.watch(userDataProvider);
+//   final nameController = ref.read(nameControllerProvider);
+//   final emailController = ref.read(emailControllerProvider);
+//   final phoneController = ref.read(phoneControllerProvider);
   
-  if (userDataState.originalName != null && nameController.text.isEmpty) {
-    nameController.text = userDataState.originalName!;
-  }
-  if (userDataState.originalEmail != null && emailController.text.isEmpty) {
-    emailController.text = userDataState.originalEmail!;
-  }
-  if (userDataState.originalPhone != null && phoneController.text.isEmpty) {
-    phoneController.text = userDataState.originalPhone!;
-  }
+//   if (userDataState.originalName != null && nameController.text.isEmpty) {
+//     nameController.text = userDataState.originalName!;
+//   }
+//   if (userDataState.originalEmail != null && emailController.text.isEmpty) {
+//     emailController.text = userDataState.originalEmail!;
+//   }
+//   if (userDataState.originalPhone != null && phoneController.text.isEmpty) {
+//     phoneController.text = userDataState.originalPhone!;
+//   }
   
-  return null;
-});
+//   return null;
+// });

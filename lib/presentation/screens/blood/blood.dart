@@ -68,74 +68,78 @@ class _BloodState extends State<Blood> {
     }
   }
 
-Future<void> _fetchDonors() async {
-  print("🔵 _fetchDonors called");
-  try {
-    setState(() => isLoading = true);
+  Future<void> _fetchDonors() async {
+    print("🔵 _fetchDonors called with filters");
+    print("🔵 _fetchDonors called, searchQuery = '$searchQuery'");
+    try {
+      setState(() => isLoading = true);
 
-    final response = await _apiService.getAllDonors();
-    print("📡 Status: ${response.statusCode}");
-    print("📦 Raw data: ${response.data}");
+      // ✅ Build query parameters from current state
+      final response = await _apiService.getAllDonors(
+        bloodGroup: selectedBloodGroup.isEmpty ? null : selectedBloodGroup,
+        country: selectedCountry.isEmpty ? null : selectedCountry,
+        state: selectedState.isEmpty ? null : selectedState,
+        district: selectedDistrict.isEmpty ? null : selectedDistrict,
+        place: selectedPlace.isEmpty ? null : selectedPlace,
+        name: searchQuery.isEmpty ? null : searchQuery,
+        // pincode: null,  // if needed later
+        // userId: null,
+      );
 
-    if (response.statusCode == 200 && response.data != null) {
-      List donorList = [];
+      print("📡 Status: ${response.statusCode}");
+      print("📦 Raw data: ${response.data}");
 
-      // ✅ Backend response ൽ 'data' ആണ് key
-      if (response.data is Map && response.data['data'] != null) {
-        donorList = response.data['data'];
-      }
-      // Fallback (old format)
-      else if (response.data is Map && response.data['donors'] != null) {
-        donorList = response.data['donors'];
-      }
-      else if (response.data is List) {
-        donorList = response.data;
-      }
+      if (response.statusCode == 200 && response.data != null) {
+        List donorList = [];
 
-      print("✅ Donors found: ${donorList.length}");
+        if (response.data is Map && response.data['data'] != null) {
+          donorList = response.data['data'];
+        } else if (response.data is Map && response.data['donors'] != null) {
+          donorList = response.data['donors'];
+        } else if (response.data is List) {
+          donorList = response.data;
+        }
 
-      if (donorList.isNotEmpty) {
-        // Cache ൽ save ചെയ്യുക
+        print("✅ Donors found: ${donorList.length}");
+
+        // Cache the *filtered* result (optional)
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('cached_donors', jsonEncode(donorList));
 
         setState(() {
           donors = donorList;
-          _extractLocationData(donorList);
+          _extractLocationData(
+            donorList,
+          ); // update location dropdowns based on filtered list
         });
       } else {
         setState(() => donors = []);
       }
-    } else {
-      // Response not OK
-      setState(() => donors = []);
+    } catch (e, stack) {
+      print("❌ API error: $e");
+      print(stack);
+      // Fallback to cache (but cache might be outdated)
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString('cached_donors');
+      if (cachedData != null) {
+        final donorList = jsonDecode(cachedData);
+        setState(() {
+          donors = donorList;
+          _extractLocationData(donorList);
+        });
+      } else {
+        setState(() {
+          donors = [];
+          countries = [];
+          states = [];
+          districts = [];
+          places = [];
+        });
+      }
+    } finally {
+      setState(() => isLoading = false);
     }
-  } catch (e, stack) {
-    print("❌ API error: $e");
-    print(stack);
-    // Cache ൽ നിന്ന് load ചെയ്യുക
-    final prefs = await SharedPreferences.getInstance();
-    final cachedData = prefs.getString('cached_donors');
-    if (cachedData != null) {
-      final donorList = jsonDecode(cachedData);
-      setState(() {
-        donors = donorList;
-        _extractLocationData(donorList);
-      });
-    } else {
-      // No cache, empty list (UI will show "Check network")
-      setState(() {
-        donors = [];
-        countries = [];
-        states = [];
-        districts = [];
-        places = [];
-      });
-    }
-  } finally {
-    setState(() => isLoading = false);
   }
-}
 
   void _extractLocationData(List<dynamic> donorList) {
     final uniqueCountries = <String>{};
@@ -146,16 +150,24 @@ Future<void> _fetchDonors() async {
     for (final donor in donorList) {
       final address = donor['address'] ?? {};
 
-      final country = address['country']?.toString().trim() ?? '';
-      final state = address['state']?.toString().trim() ?? '';
-      final district = address['district']?.toString().trim() ?? '';
-      final place = address['place']?.toString().trim() ?? '';
+      // ✅ Normalize: trim, toLowerCase, then capitalize first letter (optional)
+      String normalize(String? value) {
+        if (value == null) return '';
+        final trimmed = value.toString().trim();
+        if (trimmed.isEmpty || trimmed == 'null') return '';
+        // Capitalize first letter, rest lower (e.g., "india" -> "India")
+        return trimmed[0].toUpperCase() + trimmed.substring(1).toLowerCase();
+      }
 
-      if (country.isNotEmpty && country != 'null') uniqueCountries.add(country);
-      if (state.isNotEmpty && state != 'null') uniqueStates.add(state);
-      if (district.isNotEmpty && district != 'null')
-        uniqueDistricts.add(district);
-      if (place.isNotEmpty && place != 'null') uniquePlaces.add(place);
+      final country = normalize(address['country']);
+      final state = normalize(address['state']);
+      final district = normalize(address['district']);
+      final place = normalize(address['place']);
+
+      if (country.isNotEmpty) uniqueCountries.add(country);
+      if (state.isNotEmpty) uniqueStates.add(state);
+      if (district.isNotEmpty) uniqueDistricts.add(district);
+      if (place.isNotEmpty) uniquePlaces.add(place);
     }
 
     setState(() {
@@ -284,6 +296,7 @@ Future<void> _fetchDonors() async {
                   selectedDistrict = district;
                   selectedPlace = place;
                 });
+                _fetchDonors();
               },
               onClear: () {
                 print("📍 Location cleared"); // Debug print
@@ -295,6 +308,7 @@ Future<void> _fetchDonors() async {
                   selectedBloodGroup = '';
                   searchQuery = '';
                 });
+                _fetchDonors();
               },
             ),
             _buildBloodGroupChips(screenWidth, screenHeight),
@@ -303,11 +317,11 @@ Future<void> _fetchDonors() async {
                 isLoading: isLoading,
                 donors: donors,
                 searchQuery: searchQuery,
-                selectedCountry: selectedCountry,
-                selectedState: selectedState,
-                selectedDistrict: selectedDistrict,
-                selectedPlace: selectedPlace,
-                selectedBloodGroup: selectedBloodGroup,
+                // selectedCountry: selectedCountry,
+                // selectedState: selectedState,
+                // selectedDistrict: selectedDistrict,
+                // selectedPlace: selectedPlace,
+                // selectedBloodGroup: selectedBloodGroup,
                 onRefresh: _refreshData,
                 onMakePhoneCall: _makePhoneCall,
                 calculateAge: _calculateAge,
@@ -329,7 +343,11 @@ Future<void> _fetchDonors() async {
         children: [
           Expanded(
             child: TextField(
-              onChanged: (value) => setState(() => searchQuery = value),
+              onChanged: (value) {
+                print("✏️ TextField changed: '$value'");
+                setState(() => searchQuery = value);
+                _fetchDonors();
+              },
               decoration: InputDecoration(
                 hintText: "Search by name...",
                 hintStyle: TextStyle(fontSize: screenWidth * 0.035),
@@ -405,6 +423,7 @@ Future<void> _fetchDonors() async {
                 setState(() {
                   selectedBloodGroup = bg == "All" ? '' : bg;
                 });
+                _fetchDonors();
               },
             ),
           );
