@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:hosta/firebase_msg.dart';
@@ -44,10 +46,14 @@ class _PasswordManagerPageState extends State<PasswordManagerPage> {
   }
 
   // Get userId from SharedPreferences
-  Future<String?> _getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('userId');
-  }
+  // Future<String?> _getUserId() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   return prefs.getString('userId');
+  // }
+  Future<int?> _getUserId() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('userId');
+}
 
   // Validate passwords
   bool _validatePasswords() {
@@ -87,7 +93,7 @@ class _PasswordManagerPageState extends State<PasswordManagerPage> {
           message,
           style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.04),
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(screenWidth * 0.025),
@@ -122,7 +128,8 @@ class _PasswordManagerPageState extends State<PasswordManagerPage> {
     });
 
     try {
-      String? userId = await _getUserId();
+      int? userId = await _getUserId();
+      // String? userId = await _getUserId();
       
       if (userId == null) {
         _showErrorSnackBar("User not logged in. Please login again.");
@@ -132,31 +139,38 @@ class _PasswordManagerPageState extends State<PasswordManagerPage> {
 
       final passwordData = {
         "id": userId,
-        "password": _currentPasswordController.text,
-        "newPassword": _newPasswordController.text,
+        "password": _currentPasswordController.text.trim(),
+        "newPassword": _newPasswordController.text.trim(),
+        
       };
 
-      final response = await _apiService.sendResetPasswrord(passwordData);
+   final response = await _apiService.changePassword(passwordData);
 
-      setState(() => _isLoading = false);
+setState(() => _isLoading = false);
 
-      if (response.statusCode == 200) {
-        if (response.data["status"] == 200) {
-          _showSuccessSnackBar("Password updated successfully!");
-          
-          _currentPasswordController.clear();
-          _newPasswordController.clear();
-          _confirmPasswordController.clear();
-          
-          Future.delayed(const Duration(seconds: 1), () {
-            if (mounted) Navigator.pop(context);
-          });
-        } else {
-          _showErrorSnackBar(response.data["message"] ?? "Failed to update password");
-        }
-      } else {
-        _showErrorSnackBar("Server error. Please try again.");
-      }
+print("CHANGE PASSWORD RESPONSE : ${response.data}");
+log("$passwordData");
+
+
+if (response.statusCode == 200 &&
+    (response.data["success"] == true ||
+        response.data["status"] == 200)) {
+
+  _showSuccessSnackBar("Password updated successfully!");
+
+  _currentPasswordController.clear();
+  _newPasswordController.clear();
+  _confirmPasswordController.clear();
+
+  Future.delayed(const Duration(seconds: 1), () {
+    if (mounted) Navigator.pop(context);
+  });
+
+} else {
+  _showErrorSnackBar(
+    response.data["message"] ?? "Failed to update password",
+  );
+}
     } on DioException catch (e) {
       setState(() => _isLoading = false);
       

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hosta/presentation/screens/ambulance/register.dart';
@@ -30,6 +31,7 @@ void dispose() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _fetchAmbulances();
+     //  _refreshAmbulanceId();
     });
   }
   
@@ -41,6 +43,7 @@ Future<void> _fetchAmbulances({bool showLoader = true}) async {
     }
 
     await ref.read(ambulanceListProvider.notifier)
+    
         .fetchAmbulances();
 
   } catch (e) {
@@ -51,6 +54,11 @@ Future<void> _fetchAmbulances({bool showLoader = true}) async {
     }
   }
 }
+// Future<void> _refreshAmbulanceId() async {
+//   final prefs = await SharedPreferences.getInstance();
+//   final id = prefs.getString('ambulanceId');
+//   ref.read(ambulanceIdProvider.notifier).state = id;
+// }
 
   void _handleAmbulanceRegister() async {
     final prefs = await SharedPreferences.getInstance();
@@ -64,6 +72,7 @@ Future<void> _fetchAmbulances({bool showLoader = true}) async {
       return;
     }
 
+print("🔄 Returned from AmbulanceRegister screen");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AmbulanceRegister()),
@@ -93,7 +102,10 @@ Future<void> _fetchAmbulances({bool showLoader = true}) async {
   }
 
   void _refreshData() {
+   
     _fetchAmbulances();
+   //  _refreshAmbulanceId();
+    
   }
 
   String _normalize(String? value) {
@@ -187,6 +199,7 @@ Future<void> _fetchAmbulances({bool showLoader = true}) async {
     final isLoading = ref.watch(isLoadingProvider);
     final ambulanceList = ref.watch(ambulanceListProvider);  // already filtered by backend
     final ambulanceId = ref.watch(ambulanceIdProvider);
+    log("ambulanceId${ambulanceId}");
 
     return Scaffold(
       backgroundColor: const Color(0xFFECFDF5),
