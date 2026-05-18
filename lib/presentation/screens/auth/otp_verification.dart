@@ -73,231 +73,120 @@ class _OtpVerificationState extends State<OtpVerification> {
     }
   }
 
-  // Future<void> _verifyOtp() async {
-  //   String otp = otpController.text;
-  //   String rawPhone = widget.phone;
-    
-  //    // ✅ Clean phone number again if needed
-  // String Phone = rawPhone
-  //     .replaceAll('+', '')
-  //     .replaceAll(' ', '')
-  //     .replaceAll('-', '');
-       
-  // if (Phone.startsWith('91') && cleanPhone.length == 12) {
-  //   Phone = phone.substring(2);
-  // }
-  
-  //   if (otp.length != 6) {
-  //     setState(() {
-  //       otpError = "Please enter a valid 6-digit OTP";
-  //     });
-  //     return;
-  //   }
+Future<void> _verifyOtp() async {
+  if (isVerifying) return;
 
-  //   setState(() {
-  //     isVerifying = true;
-  //     otpError = null;
-  //   });
+  String otp = otpController.text.trim();
+  String phone = widget.phone;
+log("🔵 _verifyOtp() CALLED with OTP: $otp");  
+  log("=== STARTING OTP VERIFICATION ===");
+  log("Original phone: $phone");
 
-  //   try {
-  //     String? token = await FirebaseMsg().token;
+  String cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+  if (cleanPhone.length == 12 && cleanPhone.startsWith('91')) {
+    cleanPhone = cleanPhone.substring(2);
+  } else if (cleanPhone.length > 10) {
+    cleanPhone = cleanPhone.substring(cleanPhone.length - 10);
+  }
 
-  //     final response = await widget.apiService.otpUser({
-  //      //"phone": widget.phone, 
-  //       "phone": cleanPhone,
-  //       "otp": otp,
-  //       "FcmToken": token,
-  //     });
+  log("Cleaned phone: $cleanPhone");
+  log("Entered OTP: $otp");
 
-  //     if (response.statusCode == 200 && response.data["status"] == 200) {
-  //       final userId = response.data["userDetails"]["_id"];
-  //       final userPhone = response.data["userDetails"]["phone"];
-  //       final donorId = response.data["userDetails"]["donorId"];
-
-  //       final prefs = await SharedPreferences.getInstance();
-  //       await prefs.setString('userId', userId);
-  //       await prefs.setString('userPhone', userPhone);
-
-  //       if (donorId != null && donorId.toString().isNotEmpty) {
-  //         await prefs.setString('bloodId', donorId.toString());
-  //       }
-
-  //       if (mounted) {
-  //         showTopSnackBar(context, "Login successful!");
-  //         Navigator.pushAndRemoveUntil(
-  //           context,
-  //           MaterialPageRoute(builder: (context) => const Bottomnav()),
-  //           (route) => false,
-  //         );
-  //       }
-  //     } else {
-  //       setState(() {
-  //         otpError = response.data["message"] ?? "Invalid OTP. Please try again.";
-  //         isVerifying = false;
-  //       });
-  //     }
-  //   } on DioException catch (dioError) {
-  //     String errorMessage = "Something went wrong";
-  //     if (dioError.response != null) {
-  //       try {
-  //         errorMessage = dioError.response?.data['message'] ?? errorMessage;
-  //       } catch (_) {}
-  //     }
-  //     setState(() {
-  //       otpError = errorMessage;
-  //       isVerifying = false;
-  //     });
-  //   } catch (e) {
-  //     setState(() {
-  //       otpError = "Invalid OTP. Please try again.";
-  //       isVerifying = false;
-  //     });
-  //   }
-  // }
-
-  Future<void> _verifyOtp() async {
-    // FIXED: Prevent duplicate API calls
-    if (isVerifying) return;
-
-    String otp = otpController.text.trim();
-    String phone = widget.phone;
-
-    log("=== STARTING OTP VERIFICATION ===");
-    log("Original phone: $phone");
-
-    // Clean phone number
-    String cleanPhone =
-        phone.replaceAll(RegExp(r'[^0-9]'), '');
-
-    if (cleanPhone.length == 12 &&
-        cleanPhone.startsWith('91')) {
-      cleanPhone = cleanPhone.substring(2);
-    } else if (cleanPhone.length > 10) {
-      cleanPhone =
-          cleanPhone.substring(cleanPhone.length - 10);
-    }
-
-    log("Cleaned phone: $cleanPhone");
-    log("Entered OTP: $otp");
-
-    if (otp.length != 6) {
-      setState(() {
-        otpError = "Please enter a valid 6-digit OTP";
-        isVerifying = false;
-      });
-      return;
-    }
-
-    if (cleanPhone.length != 10) {
-      setState(() {
-        otpError = "Invalid phone number";
-        isVerifying = false;
-      });
-      return;
-    }
-
+  if (otp.length != 6) {
     setState(() {
-      isVerifying = true;
-      otpError = null;
+      otpError = "Please enter a valid 6-digit OTP";
+      isVerifying = false;
+    });
+    return;
+  }
+  if (cleanPhone.length != 10) {
+    setState(() {
+      otpError = "Invalid phone number";
+      isVerifying = false;
+    });
+    return;
+  }
+
+  setState(() {
+    isVerifying = true;
+    otpError = null;
+  });
+
+  try {
+    String? token = await FirebaseMsg().token;
+
+    final response = await widget.apiService.otpUser({
+      "phone": cleanPhone,
+      "otp": otp,
+      "FcmToken": token,
     });
 
-    try {
-      String? token = await FirebaseMsg().token;
+    log("Response status: ${response.statusCode}");
+    log("Response data: ${response.data}");
 
-      final response = await widget.apiService.otpUser({
-        "phone": cleanPhone,
-        "otp": otp,
-        "FcmToken": token,
-      });
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.data["success"] == true && response.data["userDetails"] != null) {
+        final userDetails = response.data["userDetails"];
+        final userId = userDetails["id"]?.toString();          // "115"
+        final userPhone = userDetails["phone"]?.toString();
+        final donorId = userDetails["donorId"]?.toString();
+        final authToken = response.data["token"];              // JWT token
 
-      log("Response status: ${response.statusCode}");
-      log("Response data: ${response.data}");
+        final prefs = await SharedPreferences.getInstance();
 
-      if (response.statusCode == 200 ||
-          response.statusCode == 201) {
-        if (response.data["status"] == 200 ||
-            response.data["userDetails"] != null) {
-          log("✅ OTP verification successful!");
+        // Save userId
+        if (userId != null && userId.isNotEmpty) {
+          await prefs.setString('userId', userId);
+          log("✅ Saved userId: $userId");
+        }
 
-          final userDetails =
-              response.data["userDetails"] ??
-                  response.data["data"];
+        // Save phone
+        if (userPhone != null && userPhone.isNotEmpty) {
+          await prefs.setString('userPhone', userPhone);
+        }
 
-          if (userDetails != null) {
-            final userId =
-                userDetails["_id"] ?? userDetails["id"];
+        // Save donorId if present
+        if (donorId != null && donorId.isNotEmpty) {
+          await prefs.setString('bloodId', donorId);
+        }
+if (authToken != null && authToken.toString().isNotEmpty) {
+      await prefs.setString('authToken', authToken.toString());  // ← Changed!
+      log("✅ Saved authToken: ${authToken.toString().substring(0, 20)}...");
+    } else {
+      log("⚠️ No token in response");
+    }
+ final savedToken = prefs.getString('authToken');
+    log("🔐 Verified saved token: ${savedToken != null ? 'Exists' : 'NULL'}");
 
-            final userPhone = userDetails["phone"];
-            final donorId = userDetails["donorId"];
-
-            final prefs =
-                await SharedPreferences.getInstance();
-
-            if (userId != null) {
-              await prefs.setString(
-                  'userId', userId.toString());
-            }
-
-            if (userPhone != null) {
-              await prefs.setString(
-                  'userPhone', userPhone.toString());
-            }
-
-            if (donorId != null &&
-                donorId.toString().isNotEmpty) {
-              await prefs.setString(
-                  'bloodId', donorId.toString());
-            }
-
-            if (response.data["token"] != null) {
-              await prefs.setString(
-                  'authToken',
-                  response.data["token"].toString());
-            }
-
-            if (mounted) {
-              showTopSnackBar(
-                  context, "Login successful!");
-
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const Bottomnav(),
-                ),
-                (route) => false,
-              );
-            }
-          }
-        } else {
-          setState(() {
-            otpError =
-                response.data["message"] ??
-                    "Invalid OTP";
-
-            isVerifying = false;
-          });
+        if (mounted) {
+          showTopSnackBar(context, "Login successful!");
+          // Navigate to main screen (your bottom navigation)
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const Bottomnav()),
+            (route) => false,
+          );
         }
       } else {
         setState(() {
-          otpError =
-              response.data["message"] ??
-                  "Verification failed";
-
+          otpError = response.data["message"] ?? "Invalid OTP. Please try again.";
           isVerifying = false;
         });
       }
-    } catch (e) {
-      log("Error: $e");
-
+    } else {
       setState(() {
-        otpError =
-            "Something went wrong. Please try again.";
-
+        otpError = response.data["message"] ?? "Verification failed";
         isVerifying = false;
       });
     }
+  } catch (e) {
+    log("Error: $e");
+    setState(() {
+      otpError = "Something went wrong. Please try again.";
+      isVerifying = false;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {

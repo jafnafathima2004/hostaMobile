@@ -1034,6 +1034,7 @@ class _SigninState extends State<Signin> {
   }
 
   Future<void> _sendOtp() async {
+     log("Send OTP button tapped");
     String rawPhone = phoneController.text.trim();
     String cleanPhone = _cleanPhoneNumber(rawPhone);
     
