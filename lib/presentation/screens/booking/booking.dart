@@ -457,10 +457,13 @@
 //   }
 // }
 
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hosta/providers/booking_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../common/top_snackbar.dart';
 
 class BookingScreen extends ConsumerStatefulWidget {
@@ -474,17 +477,34 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   @override
   void initState() {
     super.initState();
+    print("📌 BookingScreen initState called");
     // Initialize data when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(bookingStateProvider.notifier).initializeData();
     });
   }
-
-  @override
-  void dispose() {
-    // Cleanup is handled by the provider
-    super.dispose();
+ Future<void> _checkToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('authToken');
+    final userId = prefs.getString('userId');
+    
+    print('🔐 Token exists: ${token != null}');
+    print('👤 User ID: $userId');
+    print('🔐 Token value: ${token != null ? token!.substring(0, 20) + "..." : "NULL"}');
+    
+    if (token == null) {
+      print('❌ TOKEN MISSING - Please login again');
+      // Optional: Show dialog to login
+      // _showLoginDialog();
+    } else {
+       print('✅ Token found - Booking will work');
+    }
   }
+  // @override
+  // void dispose() {
+  //   // Cleanup is handled by the provider
+  //   super.dispose();
+  // }
 
   Future<void> _selectDate() async {
     final now = DateTime.now();
@@ -501,13 +521,20 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   }
 
   Future<void> _cancelBooking(Map<String, dynamic> booking) async {
+     showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(child: CircularProgressIndicator()),
+  );
     try {
       await ref.read(bookingStateProvider.notifier).cancelBooking(booking);
-      if (mounted) {
+      if (mounted && Navigator.canPop(context)) {
+         Navigator.pop(context);
         showTopSnackBar(context, "Booking cancelled successfully");
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && Navigator.canPop(context)) {
+         Navigator.pop(context);
         showTopSnackBar(context, "Failed to cancel booking", isError: true);
       }
     }
@@ -548,7 +575,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isSmallScreen = screenWidth < 600;
+   // final isSmallScreen = screenWidth < 600;
 
     // Show message if no user ID
     if (userId == null || userId.isEmpty) {

@@ -125,7 +125,6 @@ log("🔵 _verifyOtp() CALLED with OTP: $otp");
     log("Response data: ${response.data}");
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      // ✅ Match your actual response structure
       if (response.data["success"] == true && response.data["userDetails"] != null) {
         final userDetails = response.data["userDetails"];
         final userId = userDetails["id"]?.toString();          // "115"
@@ -150,14 +149,14 @@ log("🔵 _verifyOtp() CALLED with OTP: $otp");
         if (donorId != null && donorId.isNotEmpty) {
           await prefs.setString('bloodId', donorId);
         }
-
-        // ✅ Save auth token (crucial for future API calls)
-        if (authToken != null && authToken.toString().isNotEmpty) {
-          await prefs.setString('authToken', authToken.toString());
-          log("✅ Saved authToken");
-        } else {
-          log("⚠️ No token in response – you might need to login again later");
-        }
+if (authToken != null && authToken.toString().isNotEmpty) {
+      await prefs.setString('authToken', authToken.toString());  // ← Changed!
+      log("✅ Saved authToken: ${authToken.toString().substring(0, 20)}...");
+    } else {
+      log("⚠️ No token in response");
+    }
+ final savedToken = prefs.getString('authToken');
+    log("🔐 Verified saved token: ${savedToken != null ? 'Exists' : 'NULL'}");
 
         if (mounted) {
           showTopSnackBar(context, "Login successful!");

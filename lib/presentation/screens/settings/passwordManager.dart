@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:hosta/firebase_msg.dart';
@@ -120,72 +119,44 @@ class _PasswordManagerPageState extends State<PasswordManagerPage> {
   }
 
   // Update password API call
-  Future<void> _updatePassword() async {
-    if (!_validatePasswords()) return;
+Future<void> _updatePassword() async {
+  if (!_validatePasswords()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() => _isLoading = true);
 
-    try {
-      int? userId = await _getUserId();
-      // String? userId = await _getUserId();
-      
-      if (userId == null) {
-        _showErrorSnackBar("User not logged in. Please login again.");
-        setState(() => _isLoading = false);
-        return;
-      }
+  try {
+    final passwordData = {
+      "currentPassword": _currentPasswordController.text.trim(),
+      "newPassword": _newPasswordController.text.trim(),
+    };
 
-      final passwordData = {
-        "id": userId,
-        "password": _currentPasswordController.text.trim(),
-        "newPassword": _newPasswordController.text.trim(),
-        
-      };
+    final response = await _apiService.changePassword(passwordData);
 
-   final response = await _apiService.changePassword(passwordData);
+    setState(() => _isLoading = false);
 
-setState(() => _isLoading = false);
+    if (response.statusCode == 200 &&
+        response.data["success"] == true) {
 
-print("CHANGE PASSWORD RESPONSE : ${response.data}");
-log("$passwordData");
+      _showSuccessSnackBar("Password updated successfully!");
 
+      _currentPasswordController.clear();
+      _newPasswordController.clear();
+      _confirmPasswordController.clear();
 
-if (response.statusCode == 200 &&
-    (response.data["success"] == true ||
-        response.data["status"] == 200)) {
+      Navigator.pop(context);
 
-  _showSuccessSnackBar("Password updated successfully!");
-
-  _currentPasswordController.clear();
-  _newPasswordController.clear();
-  _confirmPasswordController.clear();
-
-  Future.delayed(const Duration(seconds: 1), () {
-    if (mounted) Navigator.pop(context);
-  });
-
-} else {
-  _showErrorSnackBar(
-    response.data["message"] ?? "Failed to update password",
-  );
-}
-    } on DioException catch (e) {
-      setState(() => _isLoading = false);
-      
-      String errorMessage = "Network error";
-      if (e.response != null) {
-        errorMessage = e.response?.data['message'] ?? 
-                      e.response?.statusMessage ?? 
-                      "Failed to update password";
-      }
-      _showErrorSnackBar(errorMessage);
-    } catch (e) {
-      setState(() => _isLoading = false);
-      _showErrorSnackBar("An unexpected error occurred");
+    } else {
+      _showErrorSnackBar(
+        response.data["message"] ?? "Failed to update password",
+      );
     }
+  } on DioException catch (e) {
+    setState(() => _isLoading = false);
+    _showErrorSnackBar(
+      e.response?.data['message'] ?? "Network error",
+    );
   }
+}
 
   // FORGOT PASSWORD FLOW - Phone OTP Verification
 
